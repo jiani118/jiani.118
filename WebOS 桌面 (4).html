@@ -1,0 +1,771 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>WebOS 桌面</title>
+<style>
+:root{--surf:rgba(243,243,243,.92);--s2:#fff;--tx:#1b1b1b;--mut:#666;--bd:rgba(0,0,0,.13);--acc:#0067c0;--sel:rgba(0,103,192,.16);--tbk:rgba(235,240,248,.88)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--surf:rgba(36,36,36,.94);--s2:#2d2d2d;--tx:#f2f2f2;--mut:#aaa;--bd:rgba(255,255,255,.15);--acc:#4cc2ff;--sel:rgba(76,194,255,.22);--tbk:rgba(24,26,32,.88)}}
+:root[data-theme=dark]{--surf:rgba(36,36,36,.94);--s2:#2d2d2d;--tx:#f2f2f2;--mut:#aaa;--bd:rgba(255,255,255,.15);--acc:#4cc2ff;--sel:rgba(76,194,255,.22);--tbk:rgba(24,26,32,.88)}
+*{box-sizing:border-box}html,body{height:100%;margin:0;overflow:hidden;font:14px "Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--tx);background:#0b3f8f;user-select:none;-webkit-user-select:none}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:var(--s2);border:1px solid var(--bd);border-radius:5px;padding:4px 10px;cursor:pointer}button:hover{background:var(--sel)}
+#desk{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);bottom:calc(48px + env(safe-area-inset-bottom,0px));background:radial-gradient(ellipse at 20% 15%,#7fd0ff 0,transparent 45%),radial-gradient(ellipse at 85% 80%,#6a5cff 0,transparent 50%),linear-gradient(135deg,#0a3d91,#1a8fe3 60%,#35c7ff);overflow:hidden}
+#icons{position:absolute;inset:6px;display:flex;flex-direction:column;flex-wrap:wrap;align-content:flex-start;gap:4px;pointer-events:none}
+.ic{pointer-events:auto;width:84px;padding:8px 2px;text-align:center;color:#fff;text-shadow:0 1px 3px #000;border-radius:6px;cursor:default}.ic:hover{background:rgba(255,255,255,.18)}.ic b{display:block;font-size:34px;font-weight:400}.ic span{font-size:12px}
+#bar{position:fixed;left:0;right:0;bottom:0;height:calc(48px + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);display:flex;align-items:center;gap:4px;padding-left:4px;padding-right:8px;background:var(--tbk);backdrop-filter:blur(18px);border-top:1px solid var(--bd);z-index:9999}
+#sb{font-size:22px;width:44px;height:38px;padding:0;background:none;border:0}#tasks{flex:1;display:flex;gap:3px;overflow-x:auto}
+.tb{display:flex;gap:6px;align-items:center;max-width:150px;min-width:44px;height:38px;background:none;border:0;border-bottom:3px solid transparent;border-radius:5px}.tb span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.tb.act{background:var(--sel);border-bottom-color:var(--acc)}
+#tray{text-align:right;font-size:12px;line-height:1.25;white-space:nowrap;padding:0 4px}
+.win{position:absolute;background:var(--surf);backdrop-filter:blur(20px);border:1px solid var(--bd);border-radius:9px;box-shadow:0 6px 24px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden;min-width:260px}.win.act{box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.win.max{left:0!important;top:0!important;width:100%!important;height:100%!important;border-radius:0}
+.tt{display:flex;justify-content:space-between;align-items:center;padding:0 0 0 12px;height:34px;touch-action:none;cursor:default;flex:none}.tt i{display:flex;font-style:normal}.tt b{width:44px;height:34px;display:grid;place-items:center;font-weight:400}.tt b:hover{background:var(--sel)}.tt .cl:hover{background:#e81123;color:#fff}
+.bd{flex:1;min-height:0;overflow:auto;background:var(--s2);display:flex;flex-direction:column;user-select:text;-webkit-user-select:text}
+.bar{display:flex;gap:6px;align-items:center;padding:6px;border-bottom:1px solid var(--bd);flex-wrap:wrap}.path{color:var(--mut);margin-left:6px}
+.ex{display:flex;flex:1;min-height:0}.side{width:120px;border-right:1px solid var(--bd);padding:6px;display:flex;flex-direction:column;gap:2px;flex:none}.side button{text-align:left;border:0;background:none}
+.files{flex:1;padding:8px;display:flex;flex-wrap:wrap;align-content:flex-start;gap:4px;overflow:auto}.fi{width:84px;padding:6px 2px;text-align:center;border-radius:6px;border:1px solid transparent;word-break:break-all;font-size:12px}.fi b{display:block;font-size:32px;font-weight:400}.fi.s{background:var(--sel);border-color:var(--acc)}
+.empty{color:var(--mut);padding:30px;width:100%;text-align:center}
+.rb{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--bd)}.rb span{flex:1}
+.np{flex:1;width:100%;border:0;padding:10px;resize:none;background:var(--s2);outline:0;font:14px/1.6 Consolas,monospace}
+.ctr{text-align:center;padding:8px;color:var(--mut)}
+#start{position:fixed;left:6px;bottom:calc(54px + env(safe-area-inset-bottom,0px));width:min(400px,calc(100% - 12px));max-height:calc(100% - 80px);background:var(--surf);backdrop-filter:blur(24px);border:1px solid var(--bd);border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.45);padding:14px;z-index:9998;display:none;overflow:auto}
+#start.on{display:block}#start input{width:100%;padding:8px 12px;border-radius:20px;border:1px solid var(--bd);background:var(--s2);margin-bottom:12px}
+#grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}#grid button{border:0;background:none;padding:10px 2px}#grid b{display:block;font-size:30px;font-weight:400}#grid span{font-size:12px}
+.sf{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--bd)}
+#cm{position:fixed;background:var(--surf);border:1px solid var(--bd);border-radius:8px;padding:4px;z-index:9997;display:none;box-shadow:0 6px 20px rgba(0,0,0,.4)}#cm button{display:block;width:100%;border:0;background:none;text-align:left}
+.disc{font-size:90px;text-align:center;padding:14px}.disc.spin{animation:sp 3s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.pl{padding:6px 12px}.pl button{display:block;width:100%;text-align:left;border:0;background:none}.pl .on{background:var(--sel)}
+.calc{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:8px;flex:1}.calc button{font-size:18px}#cd{font-size:30px;text-align:right;padding:14px;min-height:64px;word-break:break-all}
+.tabs{display:flex;gap:4px;padding:6px;border-bottom:1px solid var(--bd)}.tabs .on{background:var(--acc);color:#fff}
+.ttt{display:grid;grid-template-columns:repeat(3,90px);gap:6px;justify-content:center}.ttt button{height:90px;font-size:40px}.pad{text-align:center}.pad div{display:flex;gap:6px;justify-content:center}.pad button{width:52px;height:40px;margin:2px}
+canvas{max-width:100%;display:block;margin:0 auto}
+.win{background:linear-gradient(135deg,color-mix(in srgb,var(--s2) 48%,transparent),color-mix(in srgb,var(--s2) 20%,transparent));backdrop-filter:blur(28px) saturate(190%) brightness(1.06);-webkit-backdrop-filter:blur(28px) saturate(190%) brightness(1.06);border:1px solid rgba(255,255,255,.45);border-radius:24px;box-shadow:0 18px 50px rgba(0,0,0,.28),inset 0 1.5px 0 rgba(255,255,255,.8),inset 0 -1px 0 rgba(255,255,255,.2),inset 0 0 24px rgba(255,255,255,.15)}
+.win.act{box-shadow:0 28px 80px rgba(0,0,0,.42),inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(255,255,255,.25),inset 0 0 28px rgba(255,255,255,.2)}
+.win::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 55% at 18% -12%,rgba(255,255,255,.4),transparent 55%)}
+.win.max{border-radius:0}.tt{height:38px}.tt b{height:38px}
+.rz{position:absolute;z-index:5;touch-action:none}.win.max .rz{display:none}
+.rz.n{top:0;left:14px;right:14px;height:4px;cursor:ns-resize}.rz.s{bottom:0;left:14px;right:14px;height:6px;cursor:ns-resize}.rz.e{right:0;top:14px;bottom:14px;width:6px;cursor:ew-resize}.rz.w{left:0;top:14px;bottom:14px;width:6px;cursor:ew-resize}
+.rz.ne,.rz.nw,.rz.se,.rz.sw{width:16px;height:16px}.rz.ne{top:0;right:0;cursor:nesw-resize}.rz.sw{bottom:0;left:0;cursor:nesw-resize}.rz.nw{top:0;left:0;cursor:nwse-resize}.rz.se{bottom:0;right:0;cursor:nwse-resize}
+#qp{position:fixed;right:8px;bottom:calc(68px + env(safe-area-inset-bottom,0px));width:min(320px,calc(100% - 16px));background:var(--surf);backdrop-filter:blur(28px) saturate(190%);border:1px solid rgba(255,255,255,.45);border-radius:24px;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.7),0 16px 50px rgba(0,0,0,.4);padding:14px;z-index:9998;display:none}#qp.on{display:block}.qg{display:grid;grid-template-columns:1fr 1fr;gap:8px}.qg button{padding:12px;border-radius:16px;text-align:left}#qp input[type=range]{width:100%}#dim{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:99999}#qs{border:0;background:none;font-size:15px;padding:4px 6px}
+#desk{background:none;overflow:visible;bottom:calc(78px + env(safe-area-inset-bottom,0px))}
+#bar{left:50%;right:auto;transform:translateX(-50%);width:min(1000px,calc(100% - 20px));bottom:calc(12px + env(safe-area-inset-bottom,0px));height:58px;padding:0 10px;gap:8px;border-radius:29px;background:linear-gradient(180deg,color-mix(in srgb,var(--s2) 80%,transparent),color-mix(in srgb,var(--s2) 60%,transparent));border:1px solid rgba(255,255,255,.6);box-shadow:0 16px 44px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.3),inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(0,0,0,.1);backdrop-filter:blur(32px) saturate(210%)}
+#sb{flex:none;width:44px;height:44px;border-radius:50%;font-size:20px;color:#fff;background:linear-gradient(135deg,#2b8cff,#7a5cff);box-shadow:0 4px 14px rgba(60,100,255,.55),inset 0 1px 0 rgba(255,255,255,.5)}#sb:hover{filter:brightness(1.1)}
+#tasks{justify-content:center;align-items:center;padding:0 4px}
+.tb{position:relative;height:44px;border:0;border-radius:14px;padding:0 12px}.tb.act{background:var(--sel)}.tb.act::after{content:"";position:absolute;left:50%;bottom:3px;width:16px;height:3px;border-radius:2px;background:var(--acc);transform:translateX(-50%)}
+#tray{padding:5px 12px;border-radius:18px;background:color-mix(in srgb,var(--s2) 55%,transparent);box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)}
+#start,#qp,#np{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
+#np{position:fixed;right:8px;width:min(360px,calc(100% - 16px));max-height:calc(100% - 110px);overflow:auto;background:var(--surf);backdrop-filter:blur(28px) saturate(190%);border:1px solid rgba(255,255,255,.45);border-radius:24px;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.7),0 16px 50px rgba(0,0,0,.4);padding:14px;z-index:9998;display:none}#np.on{display:block}
+.stw{container-type:inline-size;flex:1;min-height:0;display:flex}.st{display:flex;flex:1;min-height:0;width:100%}
+.sn{width:230px;flex:none;padding:12px 8px;overflow:auto}.sm{flex:1;min-width:0;display:flex;flex-direction:column;padding:12px 16px}
+.sq{width:100%;padding:9px 14px;border-radius:20px;border:1px solid var(--bd);background:color-mix(in srgb,var(--s2) 70%,transparent);margin-bottom:10px}
+.sb2{flex:1;overflow:auto}.sb2 h1{margin:6px 0 14px;font-size:28px}
+.ub{display:flex;gap:12px;align-items:center;padding:6px 8px 14px}.av{width:48px;height:48px;border-radius:50%;background:#e8e8ec;display:grid;place-items:center;font-size:26px;color:#333;flex:none}
+.ni{display:flex;gap:12px;align-items:center;padding:11px 12px;border-radius:8px;cursor:pointer;margin:2px 0}.ni:hover{background:var(--sel)}.ni.on{background:var(--sel);box-shadow:inset 3px 0 0 var(--acc)}
+.sc,.sr{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:10px;margin-bottom:6px;background:color-mix(in srgb,var(--s2) 55%,transparent);border:1px solid var(--bd)}
+.sc{cursor:pointer}.sc:hover{background:var(--sel)}.si{font-size:24px;width:34px;text-align:center}.sx{flex:1;display:flex;flex-direction:column;min-width:0}.sx small{color:var(--mut)}.ch{font-size:22px;color:var(--mut)}
+.dev{display:flex;align-items:center;gap:20px;padding:4px 0 14px}.pv{width:200px;height:124px;border-radius:14px;border:5px solid #111;flex:none;background-size:cover}.lk{color:var(--acc);cursor:pointer}
+@container (max-width:620px){.st{flex-direction:column}.sn{width:auto;display:flex;overflow-x:auto;flex:none;padding:6px}.ub{display:none}.ni{flex:none;padding:8px 10px}.pv{width:120px;height:76px}}
+@keyframes pop{from{opacity:0;transform:scale(.94) translateY(8px)}to{opacity:1;transform:none}}
+.win{animation:pop .16s ease-out}.win.max{animation:none}#start.on,#qp.on,#np.on{animation:pop .15s ease-out}
+.tb{transition:background .15s,transform .15s}.tb:hover{transform:translateY(-2px)}.ic:active{background:rgba(255,255,255,.28)}
+#tray{position:relative}#tray[data-n="1"]::after{content:"";position:absolute;top:3px;right:3px;width:9px;height:9px;border-radius:50%;background:#e81123}
+#icons{display:block}.ic{position:absolute;width:calc(84px*var(--is,1));touch-action:none}.ic b{font-size:calc(34px*var(--is,1))}.ic span{font-size:calc(12px*var(--is,1))}
+.sl{position:relative;width:100%;aspect-ratio:16/9;container-type:inline-size;overflow:hidden;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.bd{background:color-mix(in srgb,var(--s2) 34%,transparent);margin:0 8px 8px;border-radius:16px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.28)}.win.max .bd{margin:0;border-radius:0}
+.np{background:transparent}button{background:color-mix(in srgb,var(--s2) 62%,transparent)}
+
+#start{border-radius:26px;border:1px solid rgba(255,255,255,.45);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.7),0 16px 50px rgba(0,0,0,.4)}
+
+/* 面板锚定到任务栏 + 弹出动画 */
+#start{left:max(10px,calc(50% - 500px));transform-origin:left bottom}
+#qp,#np{right:max(10px,calc(50% - 500px));transform-origin:right bottom}
+#start,#qp,#np{display:block!important;visibility:hidden;opacity:0;pointer-events:none;transform:translateY(26px) scale(.94);animation:none!important;transition:opacity .2s ease,transform .32s cubic-bezier(.2,.9,.3,1.25),visibility 0s linear .32s}
+#start.on,#qp.on,#np.on{visibility:visible;opacity:1;pointer-events:auto;transform:none;transition:opacity .2s ease,transform .32s cubic-bezier(.2,.9,.3,1.25),visibility 0s}
+@keyframes winIn{0%{opacity:0;transform:scale(.82) translateY(34px)}60%{opacity:1;transform:scale(1.015) translateY(-3px)}100%{opacity:1;transform:none}}
+@keyframes winOut{to{opacity:0;transform:scale(.9) translateY(40px)}}
+@keyframes tbIn{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+.win{animation:winIn .34s cubic-bezier(.2,.8,.3,1)}.win.max{animation:none}
+.win.mn,.win.cl{animation:winOut .17s ease-in forwards}.win.cl{pointer-events:none}
+.tb{animation:tbIn .28s cubic-bezier(.2,.9,.3,1.3)}#cm{animation:pop .15s ease-out}
+
+/* 比例适配：按屏幕宽度整体缩放，并让应用内容随窗口大小伸缩 */
+body{font-size:calc(14px*var(--ui,1))}
+#desk{bottom:calc(78px*var(--ui,1) + env(safe-area-inset-bottom,0px))}
+#bar{height:calc(58px*var(--ui,1));width:min(calc(1000px*var(--ui,1)),calc(100% - 20px));border-radius:calc(29px*var(--ui,1))}
+#sb{width:calc(44px*var(--ui,1));height:calc(44px*var(--ui,1));font-size:calc(20px*var(--ui,1))}
+.tb{height:calc(44px*var(--ui,1))}#tray{font-size:calc(12px*var(--ui,1))}#qs{font-size:calc(15px*var(--ui,1))}
+.tt{height:calc(38px*var(--ui,1))}.tt b{height:calc(38px*var(--ui,1));width:calc(44px*var(--ui,1))}
+#start{width:min(calc(400px*var(--ui,1)),calc(100% - 20px));left:max(10px,calc(50% - 500px*var(--ui,1)));bottom:calc(86px*var(--ui,1) + env(safe-area-inset-bottom,0px))}
+#qp,#np{bottom:calc(86px*var(--ui,1) + env(safe-area-inset-bottom,0px));right:max(10px,calc(50% - 500px*var(--ui,1)))}
+#qp{width:min(calc(320px*var(--ui,1)),calc(100% - 20px))}#np{width:min(calc(360px*var(--ui,1)),calc(100% - 20px))}
+.bd{container-type:inline-size}
+.svg-clock,.bd svg[viewBox="-100 -100 200 200"]{width:clamp(200px,58cqw,480px)!important}#dg{font-size:clamp(30px,8cqw,64px)!important}
+#cd{font-size:clamp(30px,10cqw,68px)}.calc{grid-auto-rows:1fr}.calc button{font-size:clamp(18px,5cqw,36px)}
+.g canvas{width:min(92cqw,60vh,560px);height:auto}.ttt{grid-template-columns:repeat(3,min(24cqw,150px))}.ttt button{height:min(24cqw,150px);font-size:clamp(40px,10cqw,80px)}
+#vd{max-height:min(52vh,640px)!important}#cv{max-height:min(55vh,640px)!important}.disc{font-size:clamp(70px,20cqw,150px)}
+.pgx{width:min(94%,clamp(640px,72cqw,1000px))!important;font-size:clamp(15px,1.3cqw + 9px,21px)}
+.bd table{width:100%}.bd td input{width:100%!important;min-width:56px;font-size:clamp(13px,1vw + 7px,18px)}
+.fi{width:clamp(84px,9cqw,132px)}.fi b{font-size:clamp(32px,4.2cqw,52px)}#st{max-width:1000px;margin:0 auto}
+#grid b{font-size:calc(30px*var(--ui,1))}#grid span{font-size:calc(12px*var(--ui,1))}#start input{font-size:calc(14px*var(--ui,1))}
+@media (max-width:700px){.tb span{display:none}.tb{min-width:44px;padding:0 10px}#dt{display:none}#tray{padding:5px 8px}#bar{gap:4px;padding:0 6px}.win{min-width:0}}
+@media (max-height:520px){#start{max-height:calc(100% - 100px)}}
+
+/* 计算器 / 日历 新版布局 */
+.cw{display:flex;flex:1;min-height:0;position:relative}.cm{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:8px;overflow:auto}
+.ce{color:var(--mut);min-height:1.4em;text-align:right;width:min(100%,520px)}#cd{width:min(100%,520px);text-align:right;font-size:clamp(34px,8cqw,64px);padding:4px 10px 12px;word-break:break-all;min-height:1.3em}
+.kp{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:clamp(48px,8.5vh,80px);gap:6px;width:min(100%,520px)}.kp button{font-size:clamp(18px,3.2cqw,30px);border-radius:12px}.kp .n{background:color-mix(in srgb,var(--s2) 88%,transparent)}.kp .eq{background:var(--acc);color:#fff;border-color:transparent}
+.chs{display:none;flex-direction:column;border-left:1px solid var(--bd);width:min(300px,38cqw);flex:none;padding:8px;overflow:auto}.chs.on{display:flex;position:absolute;inset:0;width:auto;background:var(--s2);z-index:2;border:0}
+.hi{padding:8px 10px;border-radius:8px;cursor:pointer;text-align:right}.hi:hover{background:var(--sel)}.hi small{display:block;color:var(--mut)}.hi b{font-size:1.25em}.chb{position:absolute;top:6px;left:6px;z-index:1}
+@container (min-width:640px){.chs{display:flex;position:static!important;width:min(300px,36cqw)!important;background:none!important;border-left:1px solid var(--bd)!important}.hbtn,.hc{display:none}.cvb{left:6px!important}}
+.cal{display:flex;flex-direction:column;gap:10px;padding:10px;flex:1;min-height:0;overflow:auto}.cg{width:min(100%,640px);margin:0 auto}.cwk{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:6px;text-align:center}.cwk>b{padding:6px 0;color:var(--mut)}
+.dy{aspect-ratio:1/.78;font-size:clamp(14px,1.6cqw + 6px,22px);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0}.dy small{font-size:8px;color:var(--acc);line-height:6px}.dy.we{color:#d33}.dy.td{background:var(--acc);color:#fff;border-color:transparent}.dy.sl2{outline:2px solid var(--acc)}
+.cev{width:min(100%,640px);margin:0 auto}
+@container (min-width:760px){.cal{flex-direction:row;align-items:flex-start;justify-content:center}.cg{margin:0;flex:1;max-width:560px}.cev{margin:0;width:300px;flex:none}}
+#wx{max-width:640px;margin:0 auto;width:100%}
+
+.cvo{display:none;position:absolute;inset:0;background:var(--s2);z-index:3;flex-direction:column;overflow:auto}.cvo.on{display:flex}.cvb{left:96px}
+.cvh{display:flex;align-items:center;gap:14px;padding:12px 16px;font-size:1.3em}.cvbk{font-size:1.4em;border:0;background:none}
+.cvg{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:12px 16px;width:min(100%,720px);margin:0 auto}
+.cvt{aspect-ratio:1.55;border-radius:20px;background:color-mix(in srgb,var(--s2) 70%,#888 12%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;border:1px solid var(--bd)}.cvt span{font-size:2.2em}.cvt:hover{background:var(--sel)}
+.cvf{display:flex;flex-direction:column;gap:12px;padding:8px 16px 20px;width:min(100%,560px);margin:0 auto}.cvf label{display:flex;flex-direction:column;gap:4px;color:var(--mut)}.cvf input,.cvf select{padding:10px;font-size:1.1em;border-radius:10px;border:1px solid var(--bd);background:var(--s2);color:var(--tx)}
+.cvx{display:flex;gap:8px}.cvx input{flex:1;min-width:0;font-size:1.6em!important}.cvx select{max-width:44%}.cvs{text-align:center}
+.cvr2{display:flex;flex-direction:column;gap:6px}.cvr2r{display:flex;justify-content:space-between;padding:12px 14px;border-radius:12px;background:var(--sel)}
+@container (max-width:520px){.cvg{grid-template-columns:repeat(2,1fr)}}
+
+#lkq{border:0;background:none;font-size:calc(15px*var(--ui,1));padding:4px 6px}
+#lock{position:fixed;inset:0;z-index:200000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff;text-align:center;background:rgba(10,20,40,.38);backdrop-filter:blur(38px) saturate(160%);-webkit-backdrop-filter:blur(38px) saturate(160%);transition:opacity .35s,transform .4s cubic-bezier(.2,.9,.3,1)}
+#lock.on{display:flex;animation:pop .3s ease-out}#lock.out{opacity:0;transform:translateY(-40px)}
+#lock .lt{font-size:clamp(56px,12vw,120px);font-weight:300;line-height:1.1}#lock .ld{font-size:1.2em;opacity:.9;margin-bottom:18px}
+#lock .lav{width:84px;height:84px;border-radius:50%;background:rgba(255,255,255,.85);display:grid;place-items:center;font-size:44px;color:#333}
+#lock input{padding:12px 16px;border-radius:24px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.2);color:#fff;font-size:1.1em;width:min(280px,80vw);text-align:center;outline:0}#lock input::placeholder{color:rgba(255,255,255,.7)}
+#lock button{border-radius:24px;padding:10px 22px;background:rgba(255,255,255,.28);border:1px solid rgba(255,255,255,.5);color:#fff;font-size:1.05em}#lock button:hover{background:rgba(255,255,255,.4)}
+#lock .shake{animation:shk .35s}@keyframes shk{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+</style></head><body>
+<div id="desk"><div id="icons"></div></div>
+<div id="start"><input id="q" placeholder="搜索应用"><div id="grid"></div><div class="sf"><span>👤 用户</span><span><button id="lk">🔒 锁屏</button> <button id="th">🌓 主题</button> <button id="pw">⏻ 重启</button></span></div></div>
+<div id="cm"></div><div id="qp"></div><div id="np"></div><div id="dim"></div>
+<div id="bar"><button id="sb" title="开始">🪟</button><div id="tasks"></div><button id="lkq" title="锁屏">🔒</button><button id="qs" title="快捷设置">📶 🔵 🔋</button><div id="tray" style="cursor:pointer"><div id="tm"></div><div id="dt"></div></div></div>
+<script>
+const $=(s,r=document)=>r.querySelector(s),el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let S={lang:'zh',wall:0,theme:'auto',h12:0,sec:0,tz:'',bm:['about:home'],hist:[],se:0,pw:[]};
+try{Object.assign(S,JSON.parse(localStorage.getItem('webos_set')))}catch(e){}
+const sv=()=>{try{localStorage.setItem('webos_set',JSON.stringify(S))}catch(e){alert('存储空间不足')}};
+var TR=s=>s;
+const SE=[['必应','https://www.bing.com/search?q='],['谷歌','https://www.google.com/search?q='],['百度','https://www.baidu.com/s?wd='],['DuckDuckGo','https://duckduckgo.com/?q=']];
+const WP=['radial-gradient(ellipse at 20% 15%,#7fd0ff 0,transparent 45%),radial-gradient(ellipse at 85% 80%,#6a5cff 0,transparent 50%),linear-gradient(135deg,#0a3d91,#1a8fe3 60%,#35c7ff)','linear-gradient(135deg,#1d2b64,#f8cdda)','linear-gradient(135deg,#134e5e,#71b280)','linear-gradient(135deg,#232526,#414345)','linear-gradient(135deg,#ff7e5f,#feb47b)','linear-gradient(135deg,#654ea3,#eaafc8)'];
+const applyWall=()=>{const v=S.wall;document.body.style.background=typeof v=='number'?(WP[v]||WP[0]):v.startsWith('c:')?v.slice(2):`url("${v.slice(4)}") center/cover`};
+const applyTheme=()=>{if(S.theme=='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=S.theme};
+const tz=()=>S.tz||undefined;
+const fmtT=(o={})=>new Date().toLocaleTimeString(S.lang=='en'?'en-US':'zh-CN',{timeZone:tz(),hour12:!!S.h12,hour:'2-digit',minute:'2-digit',...(S.sec||o.sec?{second:'2-digit'}:{})});
+let fs;try{fs=JSON.parse(localStorage.getItem('webos_fs'))}catch(e){}
+if(!fs){fs={items:{},n:10};const a=(id,name,type,parent,content)=>fs.items[id]={id,name,type,parent,content:content||'',del:0};
+a('docs','文档','folder','root');a('mus','音乐','folder','root');a('pic','图片','folder','root');a('dl','下载','folder','root');
+a('f1','欢迎.txt','file','docs','欢迎使用 WebOS！\n在文件资源管理器里可以新建、编辑、删除文件；删除的文件会进入回收站，可以还原。')}
+if(!fs.items.vid)fs.items.vid={id:'vid',name:'视频',type:'folder',parent:'root',content:'',del:0};
+const I=()=>Object.values(fs.items),newId=()=>'i'+(fs.n++);
+const idb=()=>new Promise((res,rej)=>{const r=indexedDB.open('webos',1);r.onupgradeneeded=()=>r.result.createObjectStore('b');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const bput=async(k,v)=>{try{const d=await idb();return await new Promise(r=>{const t=d.transaction('b','readwrite');t.objectStore('b').put(v,k);t.oncomplete=()=>r(1);t.onerror=()=>r(0)})}catch(e){return 0}};
+const bget=async k=>{try{const d=await idb();return await new Promise(r=>{const q=d.transaction('b').objectStore('b').get(k);q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)})}catch(e){return null}};
+const bdel=async k=>{try{(await idb()).transaction('b','readwrite').objectStore('b').delete(k)}catch(e){}};
+function kindOf(x){const n=x.name.toLowerCase();if(x.blob){const m=x.mime||'';return m.startsWith('video')?'video':m.startsWith('audio')?'audio':m.startsWith('image')?'img':'bin'}return /\.doc$/.test(n)?'doc':/\.xls$/.test(n)?'sheet':/\.ppt$/.test(n)?'ppt':'txt'}
+function ico(x){return x.type=='folder'?'📁':({doc:'📘',sheet:'📗',ppt:'📙',video:'🎞',audio:'🎵',img:'🖼'}[kindOf(x)]||'📄')}
+function openFile(x){const m={doc:'word',sheet:'sheet',ppt:'ppt',video:'video',audio:'music',img:'photo',txt:'notepad'}[kindOf(x)];m&&open(m,{id:x.id})}
+function putFile(id,name,content,dir){if(!id||!fs.items[id]){id=newId();fs.items[id]={id,name,type:'file',parent:dir||'docs',content:'',del:0}}fs.items[id].name=name;fs.items[id].content=content;refreshAll();notify('已保存',name);if(S.al)exportItem(fs.items[id]);return id}
+const csv2js=t=>{const D={};t.split(/\r?\n/).slice(0,20).forEach((l,r)=>l.split(',').slice(0,10).forEach((v,c)=>{if(v.trim())D['ABCDEFGHIJ'[c]+(r+1)]=v.trim()}));return JSON.stringify(D)};
+const secMsg=()=>window.isSecureContext?'':' ⚠ 你现在是用“本地文件”方式打开的（不安全环境），浏览器会直接拒绝相机/麦克风/传感器。请改用页面的 https 链接打开，或点“系统相机/系统录音”。';
+const sysPick=(acc,cap)=>{const i=el('input');i.type='file';i.accept=acc;i.setAttribute('capture',cap||'');i.onchange=()=>{if(i.files.length)addFiles([...i.files])};i.click()};
+async function saveLocal(name,data){const d=window.claude&&claude.use?await claude.use('downloads'):null;if(!d){alert('当前环境不支持保存到本地');return}try{await d.save({filename:name,data})}catch(e){if(!e||e.code!='declined')alert('保存失败：'+((e&&(e.message||e.code))||''))}}
+async function exportItem(x){const k=kindOf(x),b=x.name.replace(/\.[^.]+$/,'');if(k=='ppt'){let P={s:[]};try{P=JSON.parse(x.content)}catch(e){}return saveLocal(b+'.html','<meta charset=utf-8><style>body{margin:0;background:#222}.sl{position:relative;width:min(100vw,177vh);aspect-ratio:16/9;container-type:inline-size;overflow:hidden;margin:20px auto}</style>'+P.s.map(slideHTML).join(''))}
+if(k=='doc')return saveLocal(b+'.html','<meta charset=utf-8>'+x.content);if(k=='sheet'){let D={};try{D=JSON.parse(x.content)}catch(e){}const rows=[];for(let r=1;r<=20;r++)rows.push([...'ABCDEFGHIJ'].map(c=>'"'+String(D[c+r]||'').replace(/"/g,'""')+'"').join(','));return saveLocal(b+'.csv','\ufeff'+rows.join('\n'))}if(x.blob)return saveLocal(x.name,await bget(x.id));saveLocal(x.name,x.content)}
+async function addFiles(files,fb){for(const f of files){const n=f.name;if(/\.(docx|xlsx|xls|pptx)$/i.test(n)){try{const e0=n.match(/\.(\w+)$/)[1].toLowerCase(),p=fb||'docs',b0=n.replace(/\.[^.]+$/,''),id=newId(),r=e0=='docx'?['.doc',await readDoc(f)]:e0=='pptx'?['.ppt',JSON.stringify(await readPpt(f))]:['.xls',JSON.stringify(await readSheet(f))];fs.items[id]={id,name:uniq(p,b0,r[0]),type:'file',parent:p,content:r[1],del:0}}catch(err){alert('无法导入 '+n+'：'+err.message)}continue}
+if(/\.(txt|md|json|csv|html?)$/i.test(n)){const tx=await f.text(),b0=n.replace(/\.[^.]+$/,''),x=/csv$/i.test(n)?['.xls',csv2js(tx)]:/html?$/i.test(n)?['.doc',tx]:['.txt',tx],id=newId(),p=fb||'docs';fs.items[id]={id,name:uniq(p,b0,x[0]),type:'file',parent:p,content:x[1],del:0};continue}const e=(n.match(/\.[^.]+$/)||[''])[0],t=f.type||'',p=/video/.test(t)||/\.(mp4|webm|mov|m4v|ogv)$/i.test(n)?'vid':/audio/.test(t)||/\.(mp3|wav|ogg|m4a|flac|aac)$/i.test(n)?'mus':/image/.test(t)?'pic':(fb||'dl'),id=newId();if(await bput(id,f))fs.items[id]={id,name:uniq(p,n.slice(0,n.length-e.length),e),type:'file',parent:p,content:'',del:0,blob:1,mime:t||(p=='vid'?'video/mp4':p=='mus'?'audio/mpeg':'')};else alert('存储失败')}notify('已导入',files.length+' 个文件');refreshAll()}
+const all=[];let z=10;const apps={};
+const refreshAll=()=>{try{localStorage.setItem('webos_fs',JSON.stringify(fs))}catch(e){}all.forEach(o=>o.w.refresh&&o.w.refresh())};
+const kids=id=>I().filter(x=>x.parent===id);
+const rm=id=>{kids(id).forEach(k=>rm(k.id));bdel(id);delete fs.items[id]};
+function uniq(p,base,ext){let n=base+ext,i=1;while(I().some(x=>x.parent===p&&!x.del&&x.name===n))n=base+' ('+ ++i+')'+ext;return n}
+function focus(o){all.forEach(x=>{x.w.classList.remove('act');x.btn.classList.remove('act')});o.w.style.display='';o.min=0;o.w.style.zIndex=++z;o.w.classList.add('act');o.btn.classList.add('act')}
+function open(app,opt={}){
+ const A=apps[app];$('#start').classList.remove('on');
+ if(A.single){const e=all.find(o=>o.app===app);if(e){focus(e);e.w.onopen&&e.w.onopen(opt);return e}}
+ const D=$('#desk'),w=el('div','win'),n=all.length%5,W=Math.min(A.w*UI(),D.clientWidth-8),H=Math.min(A.h*UI(),D.clientHeight-8);
+ w.style.cssText=`width:${W}px;height:${H}px;left:${Math.max(0,Math.min(D.clientWidth-W,(D.clientWidth-W)/2+n*26-52))}px;top:${Math.max(0,Math.min(D.clientHeight-H,(D.clientHeight-H)/2+n*26-52))}px`;
+ w.innerHTML=`<div class=tt><span>${A.i} ${A.t}</span><i><b data-k=m>—</b><b data-k=x>☐</b><b data-k=c class=cl>✕</b></i></div><div class=bd></div>`;
+ const btn=el('button','tb',A.i+'<span>'+A.t+'</span>'),o={app,w,btn,min:0};all.push(o);
+ $('#tasks').append(btn);D.append(w);if(D.clientWidth<720)w.classList.add('max');
+ const tt=$('.tt',w);let d=null;w.onpointerdown=()=>focus(o);
+ ['n','s','e','w','ne','nw','se','sw'].forEach(k=>{const h=el('div','rz '+k);w.append(h);h.onpointerdown=e=>{if(w.classList.contains('max'))return;e.stopPropagation();focus(o);const r=[e.clientX,e.clientY,w.offsetLeft,w.offsetTop,w.offsetWidth,w.offsetHeight];h.setPointerCapture(e.pointerId);h.onpointermove=m=>{const dx=m.clientX-r[0],dy=m.clientY-r[1];let L=r[2],T=r[3],W=r[4],H=r[5];if(k.includes('e'))W=Math.max(260,r[4]+dx);if(k.includes('s'))H=Math.max(160,r[5]+dy);if(k.includes('w')){W=Math.max(260,r[4]-dx);L=r[2]+r[4]-W}if(k.includes('n')){H=Math.max(160,r[5]-dy);T=Math.max(0,r[3]+r[5]-H)}H=Math.max(160,Math.min(H,D.clientHeight-T));Object.assign(w.style,{left:L+'px',top:T+'px',width:W+'px',height:H+'px'})};h.onpointerup=()=>{h.onpointermove=null}}});
+ tt.onpointerdown=e=>{if(e.target.dataset.k||w.classList.contains('max'))return;d=[e.clientX-w.offsetLeft,e.clientY-w.offsetTop];tt.setPointerCapture(e.pointerId)};
+ tt.onpointermove=e=>{if(d){const DW=D.clientWidth,DH=D.clientHeight;w.style.left=Math.min(DW-80,Math.max(80-w.offsetWidth,e.clientX-d[0]))+'px';w.style.top=Math.max(0,Math.min(DH+40,e.clientY-d[1]))+'px'}};tt.onpointerup=()=>d=null;
+ tt.ondblclick=e=>{if(!e.target.dataset.k)w.classList.toggle('max')};
+ const mini=()=>{w.classList.add('mn');o.min=1;btn.classList.remove('act');setTimeout(()=>{if(o.min)w.style.display='none';w.classList.remove('mn')},180)};
+ tt.onclick=e=>{const k=e.target.dataset.k;if(k=='m')mini();if(k=='x')w.classList.toggle('max');if(k=='c'){w.onclose&&w.onclose();btn.remove();all.splice(all.indexOf(o),1);w.classList.add('cl');setTimeout(()=>w.remove(),160)}};
+ btn.onclick=()=>{if(o.min||!btn.classList.contains('act')){focus(o);if(w.offsetTop>D.clientHeight-50)w.style.top=Math.max(0,D.clientHeight-w.offsetHeight-8)+'px'}else mini()};
+ A.init($('.bd',w),w,opt);focus(o);return o}
+// 文件资源管理器
+apps.explorer={t:'文件资源管理器',i:'📁',w:720,h:460,init(b,w,opt){
+ let cur=opt.dir||'root',sel=null;
+ b.innerHTML=`<div class=bar><button data-a=up>⬆ 上一级</button><button data-a=nf>📁 新建文件夹</button><button data-a=nd>📄 新建文档</button><button data-a=nw>📘 Word</button><button data-a=nx>📗 表格</button><button data-a=np>📙 PPT</button><button data-a=im>📥 导入</button><button data-a=ex>⬇ 导出到本地</button><input type=file multiple hidden class=imp><button data-a=del>🗑 删除</button><span class=path></span></div><div class=ex><div class=side><button data-g=root>🖥 此电脑</button><button data-g=docs>📄 文档</button><button data-g=mus>🎵 音乐</button><button data-g=pic>🖼 图片</button><button data-g=dl>⬇ 下载</button><button data-r=1>🗑 回收站</button></div><div class=files></div></div>`;
+ const F=$('.files',b);
+ const render=()=>{if(cur!=='root'&&!fs.items[cur])cur='root';let p=[],c=cur;while(c!=='root'){p.unshift(fs.items[c].name);c=fs.items[c].parent}
+  $('.path',b).textContent='此电脑 › '+p.join(' › ');
+  const L=kids(cur).filter(x=>!x.del);F.innerHTML=L.length?L.map(x=>`<div class="fi ${x.id===sel?'s':''}" data-id="${x.id}"><b>${ico(x)}</b>${esc(x.name)}</div>`).join(''):'<div class=empty>此文件夹为空</div>'};
+ w.refresh=render;
+ F.onclick=e=>{const f=e.target.closest('.fi');sel=f?f.dataset.id:null;render()};
+ F.ondblclick=e=>{const f=e.target.closest('.fi');if(!f)return;const x=fs.items[f.dataset.id];if(x.type=='folder'){cur=x.id;sel=null;render()}else openFile(x)};
+ b.onclick=e=>{const t=e.target.closest('button');if(!t)return;const a=t.dataset.a;
+  if(t.dataset.r)return open('recycle');if(t.dataset.g){cur=t.dataset.g;sel=null;return render()}
+  if(a=='up'&&cur!=='root')cur=fs.items[cur].parent;
+  if(a=='nf'&&cur!=='root'){const id=newId();fs.items[id]={id,name:uniq(cur,'新建文件夹',''),type:'folder',parent:cur,content:'',del:0}}
+  if(a=='nd'&&cur!=='root'){const id=newId();fs.items[id]={id,name:uniq(cur,'新建文档','.txt'),type:'file',parent:cur,content:'',del:0};sel=id}
+  if(a=='nw'&&cur!=='root'){const id=newId();fs.items[id]={id,name:uniq(cur,'新建文档','.doc'),type:'file',parent:cur,content:'',del:0};sel=id}
+  if(a=='nx'&&cur!=='root'){const id=newId();fs.items[id]={id,name:uniq(cur,'新建表格','.xls'),type:'file',parent:cur,content:'',del:0};sel=id}
+  if(a=='ex'&&sel&&fs.items[sel]&&fs.items[sel].type=='file')exportItem(fs.items[sel]);
+  if(a=='im'){const i=$('.imp',b);i.onchange=()=>{addFiles(i.files,cur==='root'?null:cur);i.value=''};i.click()}
+  if(a=='np'&&cur!=='root'){const id=newId();fs.items[id]={id,name:uniq(cur,'新建演示','.ppt'),type:'file',parent:cur,content:'',del:0};sel=id}
+  if((a=='nf'||a=='nd'||a=='nw'||a=='nx'||a=='np')&&cur==='root')alert('请先进入一个文件夹（如“文档”）');
+  if(a=='del'&&sel&&fs.items[sel]){fs.items[sel].del=1;sel=null}
+  refreshAll()};render()}};
+// 回收站
+apps.recycle={t:'回收站',i:'🗑',w:520,h:380,single:1,init(b,w){
+ const render=()=>{const L=I().filter(x=>x.del);b.innerHTML=`<div class=bar><button data-a=clr>清空回收站</button><span class=path>${L.length} 个项目</span></div>`+(L.length?L.map(x=>`<div class=rb><b>${x.type=='folder'?'📁':'📄'}</b><span>${esc(x.name)}</span><button data-a=res data-id="${x.id}">还原</button><button data-a=kill data-id="${x.id}">永久删除</button></div>`).join(''):'<div class=empty>回收站是空的</div>')};
+ w.refresh=render;b.onclick=e=>{const a=e.target.dataset.a,id=e.target.dataset.id;if(!a)return;
+  if(a=='res'){const x=fs.items[id];x.del=0;const p=fs.items[x.parent];if(x.parent!=='root'&&(!p||p.del))x.parent='docs';x.name=uniq(x.parent,x.name.replace(/\.txt$/,''),x.name.endsWith('.txt')?'.txt':'')}
+  if(a=='kill')rm(id);if(a=='clr')I().filter(x=>x.del).forEach(x=>rm(x.id));refreshAll()};render()}};
+// 记事本
+apps.notepad={t:'记事本',i:'📝',w:520,h:400,init(b,w,opt){
+ let id=opt.id,x=id?fs.items[id]:null;
+ b.innerHTML=`<div class=bar><input class=nm style="flex:1;min-width:120px;padding:4px 8px" value="${esc(x?x.name:'新建文档.txt')}"><button data-s=1>💾 保存</button><span class=path></span></div><textarea class=np placeholder="在这里输入内容…"></textarea>`;
+ const T=$('.np',b);T.value=x?x.content:'';
+ b.onclick=e=>{if(!e.target.dataset.s)return;const nm=$('.nm',b).value.trim()||'未命名.txt';
+  if(!id||!fs.items[id]){id=newId();fs.items[id]={id,name:uniq(opt.dir||'docs',nm.replace(/\.txt$/,''),'.txt'),type:'file',parent:opt.dir||'docs',content:'',del:0}}
+  fs.items[id].name=nm;fs.items[id].content=T.value;S.al&&exportItem(fs.items[id]);$('.path',b).textContent='已保存 '+new Date().toLocaleTimeString();refreshAll()}}};
+// 音乐
+apps.music={t:'音乐播放器',i:'🎵',w:400,h:440,single:1,init(b,w){
+ const S=[['小星星','1 1 5 5 6 6 5- 4 4 3 3 2 2 1- 5 5 4 4 3 3 2- 5 5 4 4 3 3 2- 1 1 5 5 6 6 5- 4 4 3 3 2 2 1-'],['欢乐颂','3 3 4 5 5 4 3 2 1 1 2 3 3- 2 2- 3 3 4 5 5 4 3 2 1 1 2 3 2- 1 1-'],['生日快乐','5 5 6 5 h1 7- 5 5 6 5 h2 h1- 5 5 h5 h3 h1 7 6 h4 h4 h3 h1 h2 h1-']];
+ let ac,cur=0,i=0,play=0,tm,N=[];const M=[0,2,4,5,7,9,11];
+ b.innerHTML=`<div class=disc>💿</div><div class=ctr id=nw>未播放</div><div style="padding:0 16px"><input type=range id=pr min=0 max=100 value=0 style="width:100%"></div><div class=ctr><button id=pv>⏮</button> <button id=pp>▶ 播放</button> <button id=nx>⏭</button> 🔊<input type=range id=vl min=0 max=1 step=.05 value=.5></div><div class=pl>${S.map((s,k)=>`<button data-k=${k}>🎶 ${s[0]}</button>`).join('')}</div>`;
+ const load=k=>{cur=(k+S.length)%S.length;i=0;N=S[cur][1].split(' ').map(t=>{const h=t[0]=='h',n=+t.replace(/\D/g,''),f=261.63*2**((M[n-1]+(h?12:0))/12);return[f,t.endsWith('-')?.8:.4]});
+  $('#nw',b).textContent=S[cur][0];[...$('.pl',b).children].forEach((x,j)=>x.classList.toggle('on',j==cur))};
+ const beep=(f,d)=>{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime,v=+$('#vl',b).value*.4;o.type='triangle';o.frequency.value=f;o.connect(g);g.connect(ac.destination);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d*1.1);o.start(t);o.stop(t+d*1.2)};
+ const ui=()=>{$('#pp',b).textContent=play?'⏸ 暂停':'▶ 播放';$('.disc',b).classList.toggle('spin',!!play)};
+ const step=()=>{if(!play)return;if(i>=N.length){load(cur+1);i=0}const[f,d]=N[i++];beep(f,d);$('#pr',b).value=i/N.length*100;tm=setTimeout(step,d*1000)};
+ const go=p=>{play=p;clearTimeout(tm);ui();if(p)step()};
+ b.onclick=e=>{const t=e.target;if(t.dataset.k){load(+t.dataset.k);go(1)}if(t.id=='pp')go(!play);if(t.id=='nx'){load(cur+1);go(1)}if(t.id=='pv'){load(cur-1);go(1)}};
+ $('#pr',b).oninput=e=>{i=Math.floor(e.target.value/100*N.length)};
+ w.onclose=()=>{play=0;clearTimeout(tm)};load(0)}};
+// 视频
+apps.video={t:'视频播放器',i:'🎬',w:520,h:470,single:1,init(b,w){
+ const C=[['🌌 极光',(x,t,W,H)=>{x.fillStyle='#050b1f';x.fillRect(0,0,W,H);x.lineWidth=14;for(let k=0;k<5;k++){x.beginPath();for(let p=0;p<=W;p+=8){const y=H*.4+Math.sin(p/60+t*.8+k)*30+k*18;p?x.lineTo(p,y):x.moveTo(p,y)}x.strokeStyle=`hsla(${120+k*30},80%,60%,.5)`;x.stroke()}}],
+ ['✨ 粒子',(x,t,W,H)=>{x.fillStyle='#0d0d1a';x.fillRect(0,0,W,H);for(let k=0;k<90;k++){const a=k*.35+t*(.3+k%5*.05),r=20+k*2;x.fillStyle=`hsl(${k*4+t*30},90%,60%)`;x.beginPath();x.arc(W/2+Math.cos(a)*r*1.4,H/2+Math.sin(a)*r*.8,3,0,7);x.fill()}}],
+ ['🌊 波浪',(x,t,W,H)=>{x.fillStyle='#bfe6ff';x.fillRect(0,0,W,H);for(let k=0;k<5;k++){x.fillStyle=`hsla(205,80%,${60-k*9}%,.8)`;x.beginPath();x.moveTo(0,H);for(let p=0;p<=W;p+=6)x.lineTo(p,H*.4+k*28+Math.sin(p/50+t*(1+k*.3)+k)*14);x.lineTo(W,H);x.fill()}}]];
+ let k=0,t=0,play=1,last=0;const D=30;
+ b.innerHTML=`<div style="background:#000;flex:none"><canvas width=480 height=270></canvas></div><div class=bar><button id=pp>⏸</button><input type=range id=sk min=0 max=${D} step=.1 value=0 style="flex:1"><span id=tx>0:00</span></div><div class=pl>${C.map((c,j)=>`<button data-k=${j}>${c[0]}</button>`).join('')}</div>`;
+ const cv=$('canvas',b),x=cv.getContext('2d');
+ const loop=ts=>{if(!w.isConnected)return;if(play){t=(t+(ts-last)/1000)%D;$('#sk',b).value=t}last=ts;C[k][1](x,t,480,270);$('#tx',b).textContent=`0:${String(t|0).padStart(2,'0')} / 0:30`;requestAnimationFrame(loop)};
+ b.onclick=e=>{if(e.target.id=='pp'){play=!play;e.target.textContent=play?'⏸':'▶'}if(e.target.dataset.k)k=+e.target.dataset.k};
+ $('#sk',b).oninput=e=>t=+e.target.value;requestAnimationFrame(loop)}};
+// 游戏
+apps.games={t:'游戏',i:'🎮',w:380,h:520,single:1,init(b,w){
+ b.innerHTML=`<div class=tabs><button data-g=0 class=on>🐍 贪吃蛇</button><button data-g=1>⭕ 井字棋</button></div><div class=g style="padding:8px;overflow:auto"></div>`;
+ const g=$('.g',b);let stop=()=>{};w.onclose=()=>stop();
+ function snake(){g.innerHTML='<div class=ctr>得分：<b id=sc>0</b>（方向键或按钮控制）</div><canvas width=300 height=300></canvas><div class=pad><button data-d=U>▲</button><div><button data-d=L>◀</button><button data-d=D>▼</button><button data-d=R>▶</button></div></div>';
+  const c=$('canvas',g),x=c.getContext('2d');let s=[[7,7],[6,7],[5,7]],d=[1,0],f=[10,7],sc=0,over=0;const dir={U:[0,-1],D:[0,1],L:[-1,0],R:[1,0]};
+  const set=k=>{const n=dir[k];if(n&&(n[0]!==-d[0]||n[1]!==-d[1]))d=n};
+  g.onclick=e=>{if(e.target.dataset.d)set(e.target.dataset.d)};
+  const kd=e=>{const m={ArrowUp:'U',ArrowDown:'D',ArrowLeft:'L',ArrowRight:'R'}[e.key];if(m){set(m);e.preventDefault()}};addEventListener('keydown',kd);
+  const t=setInterval(()=>{if(over)return;const h=[s[0][0]+d[0],s[0][1]+d[1]];
+   if(h[0]<0||h[1]<0||h[0]>14||h[1]>14||s.some(p=>p[0]==h[0]&&p[1]==h[1])){over=1;$('#sc',g).textContent=sc+'　游戏结束，点画面重开';return}
+   s.unshift(h);if(h[0]==f[0]&&h[1]==f[1]){sc++;$('#sc',g).textContent=sc;f=[Math.random()*15|0,Math.random()*15|0]}else s.pop();
+   x.fillStyle='#1e1e1e';x.fillRect(0,0,300,300);x.fillStyle='#e74c3c';x.fillRect(f[0]*20+2,f[1]*20+2,16,16);x.fillStyle='#2ecc71';s.forEach(p=>x.fillRect(p[0]*20+1,p[1]*20+1,18,18))},130);
+  c.onclick=()=>{if(over){stop();snake()}};stop=()=>{clearInterval(t);removeEventListener('keydown',kd)}}
+ function ttt(){let B=Array(9).fill(''),end=0;const L=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  const win=p=>L.some(l=>l.every(i=>B[i]==p));
+  const draw=m=>{g.innerHTML='<div class=ctr>'+m+'</div><div class=ttt>'+B.map((v,i)=>`<button data-i=${i}>${v}</button>`).join('')+'</div><div class=ctr><button data-r=1>重新开始</button></div>'};
+  const ai=()=>{const f=B.map((v,i)=>v?-1:i).filter(i=>i>=0);for(const p of['O','X'])for(const i of f){B[i]=p;const k=win(p);B[i]='';if(k)return i}return B[4]===''?4:f[Math.random()*f.length|0]};
+  const chk=()=>win('X')?'你赢了！🎉':win('O')?'电脑赢了':B.every(v=>v)?'平局':'';draw('你是 X，先手');
+  g.onclick=e=>{const i=e.target.dataset.i;if(e.target.dataset.r)return ttt();if(end||i==null||B[i])return;B[i]='X';let m=chk();if(!m){B[ai()]='O';m=chk()}if(m)end=1;draw(m||'轮到你了')}}
+ $('.tabs',b).onclick=e=>{const k=e.target.dataset.g;if(k==null)return;stop();stop=()=>{};g.onclick=null;[...e.currentTarget.children].forEach(c=>c.classList.toggle('on',c===e.target));k==0?snake():ttt()};snake()}};
+// 计算器
+apps.calc={t:'计算器',i:'🧮',w:300,h:430,init(b){
+ const K='C ( ) ⌫ 7 8 9 ÷ 4 5 6 × 1 2 3 − 0 . = +'.split(' ');
+ b.innerHTML=`<div id=cd>0</div><div class=calc>${K.map(k=>`<button>${k}</button>`).join('')}</div>`;const d=$('#cd',b);let s='';
+ b.onclick=e=>{const k=e.target.textContent;if(e.target.tagName!='BUTTON')return;
+  if(k=='C')s='';else if(k=='⌫')s=s.slice(0,-1);else if(k=='='){try{const ex=s.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-');if(/^[0-9+\-*/.() ]+$/.test(ex))s=String(+(Function('return '+ex)()).toFixed(10));else s=''}catch(_){s='错误'}}else{if(s=='错误')s='';s+=k}
+  d.textContent=s||'0'}}};
+// 天气
+apps.weather={t:'天气',i:'⛅',w:400,h:440,init(b){
+ const C={'北京':['☀️','晴',22,32,'西北风 3级',[24,23,20,19,22]],'上海':['⛅','多云',25,60,'东风 2级',[26,27,24,25,28]],'广州':['⛈','雷阵雨',29,82,'南风 2级',[30,31,29,30,32]],'成都':['☁️','阴',20,70,'微风',[21,19,18,22,23]],'哈尔滨':['❄️','小雪',-3,55,'北风 4级',[-2,-5,-4,-1,0]]};
+ const ic=['☀️','⛅','☁️','🌦','☀️'];
+ b.innerHTML=`<div style="padding:10px"><select id=ct>${Object.keys(C).map(c=>`<option>${c}</option>`).join('')}</select></div><div id=wx style="flex:1;padding:10px 20px"></div>`;
+ const r=()=>{const c=C[$('#ct',b).value],dn='日一二三四五六';$('#wx',b).innerHTML=`<div style="text-align:center"><div style="font-size:64px">${c[0]}</div><div style="font-size:48px">${c[2]}°C</div><div>${c[1]} · 湿度 ${c[3]}% · ${c[4]}</div></div><hr style="border:0;border-top:1px solid var(--bd);margin:18px 0">`+c[5].map((t,k)=>{const d=new Date(Date.now()+(k+1)*864e5);return`<div style="display:flex;justify-content:space-between;padding:6px 0"><span>周${dn[d.getDay()]}</span><span>${ic[(k+t+9)%5]}</span><span>${t}°C</span></div>`}).join('')+'<div class=ctr>演示数据（离线）</div>'};
+ $('#ct',b).onchange=r;r()}};
+// 时钟
+apps.clock={t:'时钟',i:'🕒',w:320,h:420,init(b,w){
+ let tk='';for(let i=0;i<12;i++)tk+=`<line x1=0 y1=-88 x2=0 y2=-78 stroke=currentColor stroke-width=3 transform="rotate(${i*30})"/>`;
+ b.innerHTML=`<svg viewBox="-100 -100 200 200" style="width:240px;margin:16px auto 0;color:var(--tx)"><circle r=96 fill=none stroke=currentColor stroke-width=3 />${tk}<line id=h y2=-48 stroke=currentColor stroke-width=5 stroke-linecap=round /><line id=m y2=-70 stroke=currentColor stroke-width=3 stroke-linecap=round /><line id=s y2=-78 stroke=#e81123 stroke-width=1.5 /></svg><div id=dg style="text-align:center;font-size:34px;margin-top:8px"></div><div id=dd class=ctr></div>`;
+ const u=()=>{if(!w.isConnected||!$('#h',b))return;const n=new Date(),P=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:tz(),hour:'numeric',minute:'numeric',second:'numeric',hourCycle:'h23'}).formatToParts(n).map(p=>[p.type,+p.value])),s=P.second,m=P.minute,h=P.hour%12;
+  $('#h',b).setAttribute('transform',`rotate(${h*30+m/2})`);$('#m',b).setAttribute('transform',`rotate(${m*6+s/10})`);$('#s',b).setAttribute('transform',`rotate(${s*6})`);
+  $('#dg',b).textContent=fmtT({sec:1});$('#dd',b).textContent=n.toLocaleDateString(S.lang=='en'?'en-US':'zh-CN',{timeZone:tz(),year:'numeric',month:'long',day:'numeric',weekday:'long'});setTimeout(u,1000)};u()}};
+// 浏览器
+apps.browser={t:'浏览器',i:'🌐',w:780,h:520,single:1,init(b,w){
+ let hist=[],pos=-1;
+ b.innerHTML=`<div class=bar><button data-a=bk>◀</button><button data-a=fw>▶</button><button data-a=rl>⟳</button><button data-a=hm>🏠</button><input id=ad style="flex:1;min-width:100px;padding:4px 10px;border-radius:14px;border:1px solid var(--bd);background:var(--s2)" placeholder="输入网址或搜索"><button data-a=go>前往</button><button data-a=bm>☆</button><button data-a=ex>↗</button><button data-u="about:bookmarks" title="书签">📚</button><button data-u="about:passwords" title="密码">🔑</button><button data-u="about:history" title="历史记录">🕘</button><select id=se>${SE.map((s,i)=>`<option value=${i}>${s[0]}</option>`).join('')}</select></div><div id=bmk class=bar style="padding:2px 6px;font-size:12px"></div><div style="flex:1;min-height:0"><iframe id=fr style="width:100%;height:100%;border:0;background:#fff" sandbox="allow-scripts allow-forms allow-popups"></iframe></div><div class=ctr style="padding:2px;font-size:11px">部分网站会拒绝在框架中打开，可点 ↗ 在新标签页打开</div>`;
+ const fr=$('#fr',b),ad=$('#ad',b),cur=()=>hist[pos];
+ const pg=h=>TR(`<meta charset=utf-8><style>body{font:15px system-ui,sans-serif;text-align:center;padding:30px;background:#f5f7fb;color:#222}input{width:70%;padding:10px 14px;border-radius:20px;border:1px solid #bbb}button{margin:4px;padding:8px 14px;border-radius:8px;border:1px solid #bbb;background:#fff;cursor:pointer}a{display:block;margin:6px;color:#0067c0;cursor:pointer}</style>${h}<script>const go=v=>parent.postMessage({go:v},'*');document.onclick=e=>{const d=e.target.dataset;if(d.u)go(d.u);if(d.s)go(window.i.value);if(d.m)parent.postMessage({act:d.m,k:d.k,f:[...document.querySelectorAll('input')].map(x=>x.value)},'*')};window.i&&(i.onkeydown=e=>e.key=='Enter'&&go(i.value))<\/script>`);
+ const HOME=()=>pg('<h1>🌐 WebOS 浏览器</h1><p>输入网址或关键词</p><input id=i placeholder="搜索或输入网址"><button data-s=1>搜索</button><p><button data-u="https://www.bing.com">必应</button><button data-u="https://zh.wikipedia.org">维基百科</button><button data-u="about:history">历史记录</button></p>');
+ const HIS=()=>pg('<h2>历史记录</h2><button data-m=clrh>清除全部</button>'+(S.hist.length?S.hist.slice().reverse().map(u=>`<a data-u="${esc(u)}">${esc(u)}</a>`).join(''):'<p>暂无记录</p>'));
+ const BMP=()=>pg('<h2>📚 书签</h2>'+S.bm.map(u=>`<div><a data-u="${esc(u)}" style="display:inline-block">⭐ ${esc(u)}</a><button data-m=delbm data-k="${esc(u)}">删除</button></div>`).join(''));
+ const PWP=()=>pg('<h2>🔑 密码管理</h2><p style="color:#b00">⚠ 密码以明文保存在本浏览器的本地存储中，请勿保存重要账号。</p><div><input placeholder="网站" style="width:25%"> <input placeholder="用户名" style="width:25%"> <input type=password placeholder="密码" style="width:25%"> <button data-m=addpw>保存</button></div>'+S.pw.map((p,i)=>`<div style="margin:8px">🌐 ${esc(p.s)} · ${esc(p.u)} · <span>••••••</span><button data-p="${esc(p.p)}" onclick="this.previousElementSibling.textContent=this.dataset.p">显示</button><button data-m=delpw data-k=${i}>删除</button></div>`).join(''));
+ const norm=v=>{v=v.trim();if(!v)return'about:home';if(v.startsWith('about:')||/^https?:\/\//.test(v))return v;return /^[^\s]+\.[a-z]{2,}(\/.*)?$/i.test(v)?'https://'+v:SE[S.se||0][1]+encodeURIComponent(v)};
+ const rb=()=>{$('#bmk',b).innerHTML=S.bm.map(u=>`<button data-u="${esc(u)}">⭐ ${u=='about:home'?'主页':esc(u.replace(/^https?:\/\//,'').slice(0,18))}</button>`).join('')};
+ const star=()=>$('[data-a=bm]',b).textContent=S.bm.includes(cur())?'★':'☆';
+ const show=()=>{const u=cur();ad.value=u=='about:home'?'':u;star();if(u=='about:home')fr.srcdoc=HOME();else if(u=='about:history')fr.srcdoc=HIS();else if(u=='about:bookmarks')fr.srcdoc=BMP();else if(u=='about:passwords')fr.srcdoc=PWP();else{fr.removeAttribute('srcdoc');fr.src=u}};
+ const nav=(v,add=1)=>{const u=norm(v);if(add){hist=hist.slice(0,pos+1);hist.push(u);pos++;if(!u.startsWith('about:')){S.hist.push(u);S.hist=S.hist.slice(-50);sv()}}show()};
+ b.onclick=e=>{const a=e.target.dataset.a,u=e.target.dataset.u;if(u)return nav(u);
+  if(a=='bk'&&pos>0){pos--;show()}if(a=='fw'&&pos<hist.length-1){pos++;show()}if(a=='rl')show();if(a=='hm')nav('about:home');if(a=='go')nav(ad.value);
+  if(a=='bm'){const c=cur();S.bm=S.bm.includes(c)?S.bm.filter(x=>x!=c):[...S.bm,c];sv();rb();star()}
+  if(a=='ex'&&!cur().startsWith('about:'))window.open(cur(),'_blank')};
+ ad.onkeydown=e=>{if(e.key=='Enter')nav(ad.value)};
+ const h=e=>{if(e.source!==fr.contentWindow||!e.data)return;const d=e.data;if(d.go!=null)return nav(String(d.go));
+  if(d.act=='delbm'){S.bm=S.bm.filter(x=>x!=d.k);sv();rb();star();show()}
+  if(d.act=='clrh'){S.hist=[];sv();show()}
+  if(d.act=='addpw'){const[s,u,p]=d.f;if(s&&p){S.pw.push({s,u,p});sv();show()}}
+  if(d.act=='delpw'){S.pw.splice(+d.k,1);sv();show()}};addEventListener('message',h);w.onclose=()=>removeEventListener('message',h);
+ $('#se',b).value=S.se||0;$('#se',b).onchange=e=>{S.se=+e.target.value;sv()};rb();nav('about:home')}};
+// 设置
+apps.settings={t:'设置',i:'⚙️',w:560,h:540,single:1,init(b,w){
+ const sec=(t,h)=>`<h3 style="margin:16px 0 8px">${t}</h3>${h}`,TZ=[['','本地时区'],['UTC','UTC'],['Asia/Shanghai','北京'],['Asia/Tokyo','东京'],['Europe/London','伦敦'],['America/New_York','纽约'],['America/Los_Angeles','洛杉矶']];
+ const render=()=>{let used=0;try{used=((localStorage.getItem('webos_fs')||'').length+(localStorage.getItem('webos_set')||'').length)/1024|0}catch(e){}
+  b.innerHTML='<div style="padding:4px 18px 18px">'+
+  sec('🌐 语言','<select id=lg><option value=zh>简体中文</option><option value=en>English</option></select>')+
+  sec('🖼 壁纸',`<div style="display:flex;flex-wrap:wrap;gap:8px">${WP.map((g,i)=>`<div data-w="${i}" style="width:84px;height:54px;border-radius:6px;background:${g};cursor:pointer;border:2px solid ${S.wall===i?'var(--acc)':'transparent'}"></div>`).join('')}</div><p>纯色：<input type=color id=wc value="#1a73e8"></p><p>本地图片：<input type=file id=wf accept="image/*"></p>`)+
+  sec('🎨 外观','<select id=th2><option value=auto>跟随系统</option><option value=light>浅色</option><option value=dark>深色</option></select>')+
+  sec('🖥 桌面图标','<p>图标大小：<select id=isz><option value=0.8>小</option><option value=1>标准</option><option value=1.25>大</option></select> <button data-x=ic>重新排列图标</button></p><p>拖动桌面图标可自由摆放，会自动对齐网格。</p>')+
+  sec('🕒 时间与日期',`<p>时区：<select id=tz>${TZ.map(t=>`<option value="${t[0]}">${t[1]}</option>`).join('')}</select></p><p><label><input type=checkbox id=h12> 12 小时制</label>　<label><input type=checkbox id=sc> 任务栏显示秒</label></p>`)+
+  sec('💾 存储',`<p>已用本地存储 ${used} KB · 文件 ${I().filter(x=>x.type=='file').length} · 书签 ${S.bm.length} · 历史 ${S.hist.length}</p><p>所有数据保存在本浏览器中。</p><p><label><input type=checkbox id=al> 保存文档时同时导出到本地</label></p><button data-x=hist>清除浏览历史</button> <button data-x=all>重置全部数据</button>`)+'</div>';
+  $('#lg',b).value=S.lang;$('#th2',b).value=S.theme;$('#tz',b).value=S.tz;$('#h12',b).checked=!!S.h12;$('#sc',b).checked=!!S.sec;$('#al',b).checked=!!S.al;$('#isz',b).value=S.isz||1};
+ b.onchange=e=>{const t=e.target;
+  if(t.id=='lg'){S.lang=t.value;sv();location.reload()}
+  if(t.id=='th2'){S.theme=t.value;sv();applyTheme()}
+  if(t.id=='tz'){S.tz=t.value;sv();tick()}
+  if(t.id=='h12'){S.h12=t.checked?1:0;sv();tick()}
+  if(t.id=='isz'){S.isz=+t.value;sv();applyIcons()}
+  if(t.id=='al'){S.al=t.checked?1:0;sv()}
+  if(t.id=='sc'){S.sec=t.checked?1:0;sv();tick()}
+  if(t.id=='wc'){S.wall='c:'+t.value;sv();applyWall()}
+  if(t.id=='wf'&&t.files[0]){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1600/im.width),c=el('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);S.wall='img:'+c.toDataURL('image/jpeg',.8);sv();applyWall()};im.src=r.result};r.readAsDataURL(t.files[0])}};
+ b.onclick=e=>{const t=e.target;if(t.dataset.w!=null){S.wall=+t.dataset.w;sv();applyWall();render()}
+  if(t.dataset.x=='ic'){S.ipos={};sv();applyIcons()}
+  if(t.dataset.x=='hist'){S.hist=[];sv();render()}
+  if(t.dataset.x=='all'){if(!t.dataset.arm){t.dataset.arm=1;t.textContent='再次点击确认重置';return}try{localStorage.removeItem('webos_fs');localStorage.removeItem('webos_set')}catch(_){}location.reload()}};
+ render()}};
+// Word / 表格 / 视频 / 音乐 / 照片
+apps.word={t:'Word 文档',i:'📘',w:740,h:540,init(b,w,opt){
+ let id=opt.id,x=id?fs.items[id]:null;const B=(c,l)=>`<button data-c=${c}>${l}</button>`;
+ b.innerHTML=`<div class=bar><input class=nm style="width:130px;padding:4px 8px" value="${esc(x?x.name:'新建文档.doc')}"><button data-s=1>💾 保存</button><button data-ol=1>📂 打开本地</button>${B('bold','<b>B</b>')}${B('italic','<i>I</i>')}${B('underline','<u>U</u>')}<select data-f=formatBlock><option value=p>正文</option><option value=h1>标题 1</option><option value=h2>标题 2</option></select><select data-f=fontSize><option value=3>字号</option><option value=2>小</option><option value=4>大</option><option value=6>特大</option></select><input type=color data-f=foreColor value="#111111" style="width:34px;padding:0">${B('insertUnorderedList','• 列表')}${B('justifyLeft','⇤')}${B('justifyCenter','↔')}${B('justifyRight','⇥')}${B('undo','↶')}<span class=path></span></div><div class=pgx contenteditable style="flex:1;overflow:auto;background:#fff;color:#111;margin:10px auto;width:min(640px,94%);padding:28px;border-radius:6px;box-shadow:0 2px 12px rgba(0,0,0,.25);line-height:1.7;outline:0"></div>`;
+ const P=$('.pgx',b);P.innerHTML=x?x.content:'<p>在这里开始写作…</p>';
+ b.onmousedown=e=>{if(e.target.closest('[data-c]'))e.preventDefault()};
+ b.onclick=e=>{const t=e.target.closest('button');if(!t)return;if(t.dataset.ol)pickLocal('.docx,.html,.htm,.txt,.md,.csv',async f=>{try{P.innerHTML=await readDoc(f);$('.nm',b).value=f.name.replace(/\.[^.]+$/,'')+'.doc';id=null;$('.path',b).textContent='已打开 '+f.name+'（保存后存入“文档”）'}catch(err){$('.path',b).textContent='打开失败：'+err.message}});
+  if(t.dataset.c)document.execCommand(t.dataset.c);if(t.dataset.s){let n=$('.nm',b).value.trim()||'新建文档.doc';if(!/\.doc$/i.test(n))n+='.doc';id=putFile(id,n,P.innerHTML,opt.dir);$('.path',b).textContent='已保存 '+new Date().toLocaleTimeString()}};
+ b.onchange=e=>{const f=e.target.dataset.f;if(f){P.focus();document.execCommand(f,false,f=='formatBlock'?'<'+e.target.value+'>':e.target.value)}}}};
+apps.sheet={t:'表格',i:'📗',w:740,h:500,init(b,w,opt){
+ let id=opt.id,x=id?fs.items[id]:null,D={};try{D=JSON.parse(x.content)||{}}catch(e){}
+ const C='ABCDEFGHIJ'.split(''),R=20,rng=(a,c)=>{const o=[];for(let r=+a.slice(1);r<=+c.slice(1);r++)for(let k=C.indexOf(a[0]);k<=C.indexOf(c[0]);k++)o.push(C[k]+r);return o};
+ const num=(k,d)=>{const t=val(k,d);return typeof t=='number'?t:+t||0};
+ const val=(k,d=0)=>{const v=D[k]||'';if(v[0]!='=')return v===''||isNaN(+v)?v:+v;if(d>15)return'#循环';
+  try{const e=v.slice(1).toUpperCase().replace(/(SUM|AVG|MIN|MAX|COUNT)\(([A-J]\d+):([A-J]\d+)\)/g,(_,f,a,c)=>f+'(['+rng(a,c).join(',')+'])').replace(/\b[A-J]\d+\b/g,r=>num(r,d+1));
+   if(!/^[\d+\-*/.()\[\], ]*$/.test(e.replace(/SUM|AVG|MIN|MAX|COUNT/g,'')))return'#错误';
+   const r=Function('SUM','AVG','MIN','MAX','COUNT','return '+e)(a=>a.reduce((s,x)=>s+x,0),a=>a.reduce((s,x)=>s+x,0)/a.length,a=>Math.min(...a),a=>Math.max(...a),a=>a.length);
+   return Number.isFinite(r)?+r.toFixed(6):'#错误'}catch(_){return'#错误'}};
+ b.innerHTML=`<div class=bar><input class=nm style="width:130px;padding:4px 8px" value="${esc(x?x.name:'新建表格.xls')}"><button data-s=1>💾 保存</button><button data-ol=1>📂 打开本地</button><span class=path>支持 =A1+B1、=SUM(A1:A5)、AVG、MIN、MAX</span></div><div style="flex:1;overflow:auto"><table style="border-collapse:collapse"><tr><th></th>${C.map(c=>`<th>${c}</th>`).join('')}</tr>${Array.from({length:R},(_,r)=>`<tr><th style="padding:0 6px">${r+1}</th>${C.map(c=>`<td style="border:1px solid var(--bd);padding:0"><input data-k=${c}${r+1} style="width:76px;border:0;padding:5px;background:transparent"></td>`).join('')}</tr>`).join('')}</table></div>`;
+ const disp=()=>b.querySelectorAll('input[data-k]').forEach(i=>{if(document.activeElement!==i)i.value=val(i.dataset.k)});
+ b.addEventListener('focusin',e=>{const k=e.target.dataset.k;if(k)e.target.value=D[k]||''});
+ b.addEventListener('focusout',e=>{if(e.target.dataset.k)disp()});
+ b.addEventListener('input',e=>{const k=e.target.dataset.k;if(k)D[k]=e.target.value});
+ b.onclick=e=>{if(e.target.dataset.ol)return pickLocal('.xlsx,.xls,.csv',async f=>{try{D=await readSheet(f);disp();id=null;$('.nm',b).value=f.name.replace(/\.[^.]+$/,'')+'.xls';$('.path',b).textContent='已打开 '+f.name}catch(err){$('.path',b).textContent='打开失败：'+err.message}});if(!e.target.dataset.s)return;let n=$('.nm',b).value.trim()||'新建表格.xls';if(!/\.xls$/i.test(n))n+='.xls';id=putFile(id,n,JSON.stringify(D),opt.dir);$('.path',b).textContent='已保存 '+new Date().toLocaleTimeString()};disp()}};
+const DV=apps.video,DM=apps.music;apps.demo={...DV,t:'演示动画',i:'✨'};apps.melody={...DM,t:'电子旋律',i:'🎹'};
+const libOf=p=>I().filter(x=>!x.del&&x.blob&&(x.mime||'').startsWith(p));
+apps.video={t:'视频播放器',i:'🎬',w:640,h:540,single:1,init(b,w,opt){
+ b.innerHTML=`<div style="background:#000;flex:none"><video id=vd controls playsinline style="width:100%;max-height:300px;display:block"></video></div><div class=bar><button data-a=add>➕ 添加视频</button><input type=file accept="video/*" multiple hidden id=vf><input id=vu placeholder="视频网址 (https://…mp4)" style="flex:1;min-width:120px;padding:4px 8px"><button data-a=url>▶ 播放网址</button><button data-a=demo>✨ 内置演示</button></div><div class=pl id=vl></div><div class=ctr id=vs></div>`;
+ let u;const V=$('#vd',b);
+ const render=()=>{$('#vl',b).innerHTML=libOf('video').map(x=>`<button data-id="${x.id}">🎞 ${esc(x.name)}</button>`).join('')||'<div class=empty>还没有视频，点“添加视频”导入</div>'};
+ const playId=async id=>{const f=await bget(id);if(!f)return;if(u)URL.revokeObjectURL(u);u=URL.createObjectURL(f);$('#vs',b).textContent='';V.src=u;V.play().catch(()=>{})};
+ w.refresh=render;w.onopen=o=>o.id&&playId(o.id);
+ b.onclick=e=>{const t=e.target,a=t.dataset.a;if(t.dataset.id)playId(t.dataset.id);if(a=='add')$('#vf',b).click();if(a=='demo')open('demo');if(a=='url'){const v=$('#vu',b).value.trim();if(v){V.src=v;V.play().catch(()=>{});$('#vs',b).textContent='若无法播放，可能是网站不允许外链或页面安全策略拦截'}}};
+ $('#vf',b).onchange=async e=>{await addFiles(e.target.files);e.target.value=''};
+ V.onerror=()=>{if(V.getAttribute('src'))$('#vs',b).textContent='无法播放此视频'};
+ w.onclose=()=>{V.pause();u&&URL.revokeObjectURL(u)};render();if(opt.id)playId(opt.id)}};
+apps.music={t:'音乐播放器',i:'🎵',w:420,h:520,single:1,init(b,w,opt){
+ b.innerHTML=`<div class=disc>💿</div><div class=ctr id=nw>未播放</div><audio id=au controls style="width:calc(100% - 24px);margin:0 12px"></audio><div class=bar><button data-a=add>➕ 添加音乐</button><input type=file accept="audio/*" multiple hidden id=af><button data-a=mel>🎹 内置旋律</button></div><div class=pl id=pl></div>`;
+ let u,cur=-1;const A=$('#au',b);
+ const render=()=>{$('#pl',b).innerHTML=libOf('audio').map((x,k)=>`<button data-k=${k} class="${k==cur?'on':''}">🎶 ${esc(x.name)}</button>`).join('')||'<div class=empty>还没有音乐，点“添加音乐”导入</div>'};
+ const play=async k=>{const L=libOf('audio');if(!L[k])return;cur=k;const f=await bget(L[k].id);if(!f)return;if(u)URL.revokeObjectURL(u);u=URL.createObjectURL(f);A.src=u;A.play().catch(()=>{});$('#nw',b).textContent=L[k].name;render()};
+ A.onplay=()=>$('.disc',b).classList.add('spin');A.onpause=()=>$('.disc',b).classList.remove('spin');A.onended=()=>play(cur+1);
+ w.refresh=render;w.onopen=o=>{const k=libOf('audio').findIndex(x=>x.id==o.id);if(k>=0)play(k)};
+ b.onclick=e=>{const t=e.target,a=t.dataset.a;if(t.dataset.k!=null)play(+t.dataset.k);if(a=='add')$('#af',b).click();if(a=='mel')open('melody')};
+ $('#af',b).onchange=async e=>{await addFiles(e.target.files);e.target.value=''};
+ w.onclose=()=>{A.pause();u&&URL.revokeObjectURL(u)};render();if(opt.id)w.onopen(opt)}};
+apps.photo={t:'照片',i:'🖼',w:560,h:420,init(b,w,opt){bget(opt.id).then(f=>{if(f)b.innerHTML=`<img src="${URL.createObjectURL(f)}" style="max-width:100%;max-height:100%;margin:auto;object-fit:contain">`})}};
+// 工具类应用
+const CITY=[['北京',39.9,'Asia/Shanghai',13,15],['上海',31.2,'Asia/Shanghai',17,12],['广州',23.1,'Asia/Shanghai',23,8],['深圳',22.5,'Asia/Shanghai',23,8],['成都',30.7,'Asia/Shanghai',17,10],['重庆',29.6,'Asia/Shanghai',19,12],['杭州',30.3,'Asia/Shanghai',17,12],['武汉',30.6,'Asia/Shanghai',17,13],['西安',34.3,'Asia/Shanghai',14,14],['哈尔滨',45.8,'Asia/Shanghai',4,23],['乌鲁木齐',43.8,'Asia/Shanghai',7,22],['拉萨',29.7,'Asia/Shanghai',9,9],['香港',22.3,'Asia/Hong_Kong',23,8],['台北',25,'Asia/Taipei',23,8],['东京',35.7,'Asia/Tokyo',16,11],['首尔',37.6,'Asia/Seoul',12,14],['新加坡',1.35,'Asia/Singapore',27,1],['曼谷',13.8,'Asia/Bangkok',28,3],['迪拜',25.2,'Asia/Dubai',28,9],['孟买',19.1,'Asia/Kolkata',27,3],['莫斯科',55.8,'Europe/Moscow',6,14],['伦敦',51.5,'Europe/London',11,7],['巴黎',48.9,'Europe/Paris',12,9],['柏林',52.5,'Europe/Berlin',10,10],['罗马',41.9,'Europe/Rome',16,9],['开罗',30,'Africa/Cairo',22,8],['悉尼',-33.9,'Australia/Sydney',18,5],['纽约',40.7,'America/New_York',13,12],['洛杉矶',34,'America/Los_Angeles',18,5],['芭加哥',41.9,'America/Chicago',10,14],['多伦多',43.7,'America/Toronto',9,14],['圣保罗',-23.5,'America/Sao_Paulo',20,4]];
+const est=(c,k=0)=>{const d=new Date(Date.now()+k*864e5),m=d.getMonth()+d.getDate()/30,pk=c[1]>=0?6.5:0.5;return Math.round(c[3]+c[4]*Math.cos(2*Math.PI*(m-pk)/12)+Math.sin(k*2+c[1])*2)};
+const cond=(c,k)=>{const h=Math.abs(Math.sin(c[1]*7+(new Date().getDate()+k)*1.7));return h<.3?['☀️','晴']:h<.6?['⛅','多云']:h<.8?['☁️','阴']:['🌦','阵雨']};
+apps.weather={t:'天气',i:'⛅',w:420,h:520,init(b,w){
+ S.wcity=S.wcity||['北京','上海','广州'];
+ b.innerHTML=`<div class=bar><select id=ws style="flex:1">${CITY.map(c=>`<option>${c[0]}</option>`).join('')}</select><button data-a=add>➕ 添加城市</button></div><div id=wx style="flex:1;overflow:auto;padding:8px"></div>`;
+ const dn='日一二三四五六';
+ const render=()=>{$('#wx',b).innerHTML=S.wcity.map((n,i)=>{const c=CITY.find(x=>x[0]==n);if(!c)return'';const[ic,ds]=cond(c,0);return`<div class=rb style="display:block"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:34px">${ic}</span><span style="flex:1"><b>${n}</b><br>${ds}</span><b style="font-size:30px">${est(c,0)}°</b><button data-i=${i}>✕</button></div><div style="display:flex;justify-content:space-between;font-size:12px;margin-top:6px">${[1,2,3,4].map(k=>{const d=new Date(Date.now()+k*864e5);return`<span>周${dn[d.getDay()]} ${cond(c,k)[0]} ${est(c,k)}°</span>`}).join('')}</div></div>`}).join('')+'<div class=ctr>⚠ 气候估算（离线），不是实时天气</div>'};
+ b.onclick=e=>{const t=e.target.closest('button');if(!t)return;if(t.dataset.a){const n=$('#ws',b).value;if(!S.wcity.includes(n)){S.wcity.push(n);sv()}}else if(t.dataset.i!=null){S.wcity.splice(+t.dataset.i,1);sv()}render()};render()}};
+// 闹钟 / 倒计时 / 秒表 / 世界时钟
+const TM={end:0,left:0},SW={t0:0,acc:0,run:0,laps:[]};let lastMin='';
+const ring=msg=>{notify('⏰ 提醒',msg);const bn=el('div','',`⏰ ${esc(msg)} <button>停止</button>`);bn.style.cssText='position:fixed;top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:100000;background:var(--surf);padding:12px 18px;border-radius:20px;box-shadow:0 8px 30px rgba(0,0,0,.4);backdrop-filter:blur(20px)';document.body.append(bn);let ac;try{ac=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}
+ const bp=()=>{if(!ac)return;const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=880;o.connect(g);g.connect(ac.destination);g.gain.setValueAtTime(.3,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.4);o.start();o.stop(ac.currentTime+.45)};
+ bp();const iv=setInterval(bp,800);bn.onclick=e=>{if(e.target.tagName=='BUTTON'){clearInterval(iv);bn.remove()}};setTimeout(()=>{clearInterval(iv);bn.remove()},60000)};
+setInterval(()=>{const n=new Date(),hm=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');if(hm!==lastMin){lastMin=hm;(S.alm||[]).forEach(a=>{if(a.on&&a.t==hm)ring('闹钟 '+hm+(a.l?' · '+a.l:''))})}if(TM.end&&Date.now()>=TM.end){TM.end=0;ring('倒计时结束')}},1000);
+const OC=apps.clock;
+apps.clock={t:'时钟',i:'🕒',w:400,h:540,init(b,w){
+ let tab=0;S.alm=S.alm||[];S.wc=S.wc||['东京','纽约','伦敦'];
+ b.innerHTML='<div class=tabs style="overflow-x:auto"></div><div class=ck style="flex:1;overflow:auto;display:flex;flex-direction:column"></div>';
+ const T=$('.tabs',b),C=$('.ck',b);T.innerHTML=['🕒 时钟','⏰ 闹钟','⏳ 倒计时','⏱ 秒表','🌍 世界'].map((n,i)=>`<button data-t=${i}>${n}</button>`).join('');
+ const fm=ms=>{const s=Math.max(0,ms)/1000;return String(s/3600|0).padStart(2,'0')+':'+String(s/60%60|0).padStart(2,'0')+':'+String(s%60|0).padStart(2,'0')+'.'+((s*10%10)|0)};
+ const big=id=>`<div id=${id} style="font:40px/1.6 Consolas,monospace;text-align:center"></div>`,bt=(a,l)=>`<button data-a=${a}>${l}</button>`;
+ const alm=()=>S.alm.map((a,i)=>`<div class=rb><b style="font-size:22px">${a.t}</b><span>${esc(a.l||'')}</span><button data-a=tg data-i=${i}>${a.on?'🔔 开':'🔕 关'}</button><button data-a=dl data-i=${i}>删除</button></div>`).join('')||'<div class=empty>还没有闹钟</div>';
+ const wl=()=>S.wc.map((n,i)=>{const c=CITY.find(x=>x[0]==n);return c?`<div class=rb><span>${n}</span><b data-z="${c[2]}"></b><button data-a=wr data-i=${i}>✕</button></div>`:''}).join('');
+ const view=()=>{[...T.children].forEach((x,i)=>x.classList.toggle('on',i==tab));if(tab==0)return OC.init(C,w);
+  C.innerHTML=[0,`<div class=bar><input type=time id=at value="07:00"><input id=an placeholder="备注" style="flex:1;padding:4px 8px">${bt('add','添加')}</div><div id=al2>${alm()}</div>`,
+  big('cd2')+`<div class=bar style="justify-content:center"><input id=cmn type=number min=0 value=5 style="width:64px"> 分 <input id=csc type=number min=0 max=59 value=0 style="width:64px"> 秒</div><div class=bar style="justify-content:center">${bt('cs','开始')}${bt('cp','暂停')}${bt('cr','重置')}</div>`,
+  big('sw')+`<div class=bar style="justify-content:center">${bt('ss','开始/暂停')}${bt('sl','计次')}${bt('sr','重置')}</div><div id=lp></div>`,
+  `<div class=bar><select id=wsel style="flex:1">${CITY.map(c=>`<option>${c[0]}</option>`).join('')}</select>${bt('wa','添加城市')}</div><div id=wl>${wl()}</div>`][tab]};
+ const upd=()=>{if(!w.isConnected)return;const cd=$('#cd2',C);if(cd)cd.textContent=fm(TM.end?TM.end-Date.now():TM.left||(+$('#cmn',C).value*60+ +$('#csc',C).value)*1000);
+  const s=$('#sw',C);if(s)s.textContent=fm(SW.acc+(SW.run?Date.now()-SW.t0:0));
+  C.querySelectorAll('[data-z]').forEach(e=>e.textContent=new Date().toLocaleTimeString('zh-CN',{timeZone:e.dataset.z,hour12:false,weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit'}));setTimeout(upd,100)};
+ b.onclick=e=>{const t=e.target.closest('button');if(!t)return;const D=t.dataset,a=D.a,i=+D.i;if(D.t!=null){tab=+D.t;view();return}
+  if(a=='add'){const v=$('#at',C).value;if(v){S.alm.push({t:v,on:1,l:$('#an',C).value});sv();$('#al2',C).innerHTML=alm()}}
+  if(a=='tg'){S.alm[i].on=!S.alm[i].on;sv();$('#al2',C).innerHTML=alm()}
+  if(a=='dl'){S.alm.splice(i,1);sv();$('#al2',C).innerHTML=alm()}
+  if(a=='cs'){const l=TM.left||(+$('#cmn',C).value*60+ +$('#csc',C).value)*1000;if(l>0){TM.end=Date.now()+l;TM.left=0}}
+  if(a=='cp'&&TM.end){TM.left=TM.end-Date.now();TM.end=0}
+  if(a=='cr'){TM.end=0;TM.left=0}
+  if(a=='ss'){if(SW.run){SW.acc+=Date.now()-SW.t0;SW.run=0}else{SW.t0=Date.now();SW.run=1}}
+  if(a=='sl'&&(SW.run||SW.acc)){SW.laps.unshift(fm(SW.acc+(SW.run?Date.now()-SW.t0:0)));$('#lp',C).innerHTML=SW.laps.map((l,k)=>`<div class=rb><span>#${SW.laps.length-k}</span><b>${l}</b></div>`).join('')}
+  if(a=='sr'){SW.acc=0;SW.run=0;SW.laps=[];$('#lp',C).innerHTML=''}
+  if(a=='wa'){const n=$('#wsel',C).value;if(!S.wc.includes(n)){S.wc.push(n);sv();$('#wl',C).innerHTML=wl()}}
+  if(a=='wr'){S.wc.splice(i,1);sv();$('#wl',C).innerHTML=wl()}};view();upd()}};
+// 日历
+apps.calendar={t:'日历',i:'📅',w:420,h:540,init(b,w){
+ let d=new Date(),sel=null;d.setDate(1);const key=(y,m,dd)=>y+'-'+(m+1)+'-'+dd;
+ const render=()=>{S.ev=S.ev||{};const y=d.getFullYear(),m=d.getMonth(),f=new Date(y,m,1).getDay(),n=new Date(y,m+1,0).getDate(),td=new Date(),tk=key(td.getFullYear(),td.getMonth(),td.getDate());
+  let c='';for(let i=0;i<f;i++)c+='<div></div>';for(let i=1;i<=n;i++){const k=key(y,m,i);c+=`<button data-d="${k}" style="height:42px;${k==tk?'border-color:var(--acc);':''}${k==sel?'background:var(--sel);':''}">${i}${S.ev[k]?'<br><small>•</small>':''}</button>`}
+  b.innerHTML=`<div class=bar><button data-m=-1>◀</button><b style="flex:1;text-align:center">${y} 年 ${m+1} 月</b><button data-m=1>▶</button></div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:8px;text-align:center">${'日一二三四五六'.split('').map(x=>`<b>${x}</b>`).join('')}${c}</div><div style="padding:8px">${sel?`<div><b>${sel}</b></div>${(S.ev[sel]||[]).map((t,i)=>`<div class=rb><span>${esc(t)}</span><button data-x=${i}>删除</button></div>`).join('')}<div class=bar><input id=ei placeholder="添加日程" style="flex:1;padding:4px 8px"><button data-a=add>添加</button></div>`:'<div class=ctr>点击日期查看或添加日程</div>'}</div>`};
+ b.onclick=e=>{const t=e.target.closest('button');if(!t)return;const D=t.dataset;if(D.m)d.setMonth(d.getMonth()+ +D.m);if(D.d)sel=D.d;if(D.x!=null){S.ev[sel].splice(+D.x,1);if(!S.ev[sel].length)delete S.ev[sel];sv()}if(D.a){const v=$('#ei',b).value.trim();if(v){(S.ev[sel]=S.ev[sel]||[]).push(v);sv()}}render()};render()}};
+// 相机 / 录音 / 指南针
+apps.camera={t:'相机',i:'📷',w:520,h:520,init(b,w){
+ b.innerHTML=`<video id=cv autoplay playsinline muted style="width:100%;max-height:360px;background:#000"></video><div class=bar><button data-a=start>📷 开启相机</button><button data-a=snap>⚪ 拍照</button><button data-a=flip>🔄 切换镜头</button><button data-a=sys>📲 系统相机</button></div><div class=ctr id=cs>照片会保存到“图片”文件夹</div>`;
+ let st,face='user';const V=$('#cv',b),stop=()=>{st&&st.getTracks().forEach(t=>t.stop());st=null};
+ const start=async()=>{stop();try{st=await navigator.mediaDevices.getUserMedia({video:{facingMode:face}});V.srcObject=st}catch(e){$('#cs',b).textContent='无法打开相机：'+(e.message||e.name)+'（需要浏览器授权，且当前页面环境允许使用相机）'+secMsg()}};
+ b.onclick=async e=>{const a=e.target.dataset.a;if(a=='sys')sysPick('image/*','environment');if(a=='start')start();if(a=='flip'){face=face=='user'?'environment':'user';start()}
+  if(a=='snap'&&st&&V.videoWidth){const c=el('canvas');c.width=V.videoWidth;c.height=V.videoHeight;c.getContext('2d').drawImage(V,0,0);const bl=await new Promise(r=>c.toBlob(r,'image/jpeg',.9));await addFiles([new File([bl],'照片'+Date.now()+'.jpg',{type:'image/jpeg'})]);$('#cs',b).textContent='已保存到“图片”文件夹'}};w.onclose=stop}};
+apps.recorder={t:'录音机',i:'🎙',w:420,h:420,init(b,w){
+ b.innerHTML=`<div class=disc id=rd>🎙</div><div class=ctr id=rt>00:00</div><div class=bar style="justify-content:center"><button data-a=rec>⏺ 开始录音</button><button data-a=stp>⏹ 停止并保存</button><button data-a=sys>📲 系统录音</button></div><div class=ctr id=rs>录音会保存到“音乐”文件夹</div>`;
+ let mr,ch=[],st,t0,iv;
+ b.onclick=async e=>{const a=e.target.dataset.a;
+  if(a=='sys')sysPick('audio/*','');
+  if(a=='rec'&&!mr){try{st=await navigator.mediaDevices.getUserMedia({audio:true});mr=new MediaRecorder(st);ch=[];mr.ondataavailable=x=>ch.push(x.data);
+   mr.onstop=async()=>{const bl=new Blob(ch,{type:mr.mimeType||'audio/webm'});st.getTracks().forEach(t=>t.stop());mr=null;clearInterval(iv);$('#rd',b).classList.remove('spin');await addFiles([new File([bl],'录音'+new Date().toLocaleTimeString().replace(/\W/g,'')+'.webm',{type:bl.type})]);$('#rs',b).textContent='已保存到“音乐”文件夹'};
+   mr.start();t0=Date.now();$('#rd',b).classList.add('spin');iv=setInterval(()=>{const s=(Date.now()-t0)/1000|0;$('#rt',b).textContent=String(s/60|0).padStart(2,'0')+':'+String(s%60).padStart(2,'0')},500)}catch(err){$('#rs',b).textContent='无法录音：'+(err.message||err.name)+secMsg()}}
+  if(a=='stp'&&mr)mr.stop()};
+ w.onclose=()=>{mr&&mr.state!='inactive'&&mr.stop();clearInterval(iv)}}};
+
+// 状态栏快捷设置
+const qp=$('#qp');
+const qrender=async()=>{let bat='不可用';try{const g=await navigator.getBattery();bat=Math.round(g.level*100)+'%'+(g.charging?' ⚡':'')}catch(e){}const c=navigator.connection||{};
+ qp.innerHTML=`<div class=qg><button data-q=net>📶 Wi‑Fi<br><small>${navigator.onLine?'已联网'+(c.effectiveType?' · '+c.effectiveType:''):'未联网'}</small></button><button data-q=bt>🔵 蓝牙<br><small id=bts>${esc(S.btn||'点击搜索设备')}</small></button><button data-q=th>🌓 深色模式</button><button data-q=fs>⛶ 全屏</button><button data-q=lock>🔒 锁屏</button></div><p>☀ 亮度 <input type=range id=br min=20 max=100 value=${S.br||100}></p><p>🔋 电池：${bat}</p><p style="font-size:12px;color:var(--mut)">网页无法开关系统 Wi‑Fi / 蓝牙，这里显示的是真实状态；蓝牙可搜索并选择附近设备。</p>`};
+qp.onclick=async e=>{e.stopPropagation();const bt=e.target.closest('button'),q=bt&&bt.dataset.q;
+ if(q=='bt'){try{const d=await navigator.bluetooth.requestDevice({acceptAllDevices:true});S.btn=d.name||'已选择设备';sv();qrender()}catch(err){$('#bts',qp).textContent=navigator.bluetooth?'已取消或不可用':'此浏览器不支持蓝牙'}}
+ if(q=='lock'){qp.classList.remove('on');showLock()}if(q=='th')$('#th').click();if(q=='fs'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})}if(q=='net'){qp.classList.remove('on');open('net')}};
+qp.oninput=e=>{if(e.target.id=='br'){S.br=+e.target.value;$('#dim').style.opacity=1-S.br/100;sv()}};
+$('#dim').style.opacity=1-(S.br||100)/100;
+$('#qs').onclick=e=>{e.stopPropagation();$('#start').classList.remove('on');$('#np').classList.remove('on');qp.classList.toggle('on');qrender()};
+const np=$('#np');let nm=new Date(),nsel=null,lpT=0,lp=0;nm.setDate(1);
+const badge=()=>{if(S.nu)$('#tray').dataset.n=1;else delete $('#tray').dataset.n};
+function notify(a,b){S.nt=S.nt||[];S.nt.push({a,b,t:Date.now()});S.nt=S.nt.slice(-30);S.nu=(S.nu||0)+1;sv();badge();if(np.classList.contains('on'))nrender()}
+const nrender=async()=>{S.ev=S.ev||{};S.nt=S.nt||[];let bat='不可用',lv=null;try{const g=await navigator.getBattery();lv=Math.round(g.level*100);bat=lv+'%'+(g.charging?' ⚡充电中':'')}catch(e){}
+ const now=new Date(),loc=S.lang=='en'?'en-US':'zh-CN',y=nm.getFullYear(),m=nm.getMonth(),f=new Date(y,m,1).getDay(),n=new Date(y,m+1,0).getDate(),key=(a,b,c)=>a+'-'+(b+1)+'-'+c,tk=key(now.getFullYear(),now.getMonth(),now.getDate());
+ let cells='';for(let i=0;i<f;i++)cells+='<span></span>';for(let i=1;i<=n;i++){const k=key(y,m,i);cells+=`<button data-nd="${k}" style="padding:4px 0;border-radius:50%;border:0;${k==tk?'background:var(--acc);color:#fff;':''}${k==nsel?'outline:2px solid var(--acc);':''}">${i}${S.ev[k]?'<small style="display:block;line-height:4px">•</small>':''}</button>`}
+ const evk=nsel||tk;
+ np.innerHTML=`<div id=npt style="font-size:34px;font-weight:600">${fmtT({sec:1})}</div><div style="color:var(--mut)">${now.toLocaleDateString(loc,{timeZone:tz(),year:'numeric',month:'long',day:'numeric',weekday:'long'})}</div>
+ <div style="margin:12px 0"><div style="display:flex;justify-content:space-between"><span>🔋 电量</span><b>${bat}</b></div><div style="height:8px;border-radius:4px;background:rgba(128,128,128,.3);margin-top:6px;overflow:hidden"><div style="height:100%;width:${lv==null?0:lv}%;background:${lv!=null&&lv<=20?'#e81123':'#2ecc71'}"></div></div></div>
+ <div class=bar style="padding:4px 0"><button data-nm=-1>◀</button><b style="flex:1;text-align:center">${y} 年 ${m+1} 月</b><button data-nm=1>▶</button></div>
+ <div style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;gap:2px">${[...'日一二三四五六'].map(x=>`<b style="font-size:12px;color:var(--mut)">${x}</b>`).join('')}${cells}</div>
+ <div style="margin:8px 0;font-size:13px"><b>${evk}</b> ${(S.ev[evk]||[]).map(t=>`<div>• ${esc(t)}</div>`).join('')||'<span style="color:var(--mut)">没有日程</span>'}</div><button data-na=cal>📅 打开日历</button>
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px"><b>🔔 通知</b><button data-na=clr>全部清除</button></div>
+ ${S.nt.length?S.nt.slice().reverse().map(x=>`<div class=rb style="display:block"><div><b>${esc(x.a)}</b> <small style="color:var(--mut)">${new Date(x.t).toLocaleTimeString(loc,{hour:'2-digit',minute:'2-digit'})}</small></div><div style="font-size:12px;color:var(--mut)">${esc(x.b||'')}</div></div>`).join(''):'<div class=ctr>暂无通知</div>'}`;
+ S.nu=0;sv();badge()};
+np.onclick=e=>{e.stopPropagation();const t=e.target.closest('button');if(!t)return;const D=t.dataset;if(D.nm)nm.setMonth(nm.getMonth()+ +D.nm);if(D.nd)nsel=D.nd;if(D.na=='clr'){S.nt=[];sv()}if(D.na=='cal'){np.classList.remove('on');open('calendar');return}nrender()};
+setInterval(()=>{if(np.classList.contains('on')){const e=$('#npt',np);if(e)e.textContent=fmtT({sec:1})}},1000);
+$('#tray').onclick=e=>{e.stopPropagation();$('#start').classList.remove('on');qp.classList.remove('on');np.classList.toggle('on');if(np.classList.contains('on'))nrender()};
+badge();{const d=new Date(),k=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();if(S.nday!=k&&S.ev&&S.ev[k]){S.nday=k;notify('📅 今天的日程',S.ev[k].join('、'))}}
+// 长按任务栏菜单
+const showMenu=(x,items)=>{const m=$('#cm'),bt=$('#bar').getBoundingClientRect();lpT=Date.now();lp=1;m.innerHTML=items.map((it,i)=>`<button data-i=${i}>${it[0]}</button>`).join('');m.style.cssText=`display:block;z-index:100000;min-width:190px;left:${Math.max(8,Math.min(x-90,innerWidth-208))}px;top:auto;bottom:${innerHeight-bt.top+8}px`;m.onclick=e=>{const i=e.target.dataset.i;if(i!=null){m.style.display='none';items[i][1]()}}};
+const barMenu=(x,tgt)=>{const b=tgt&&tgt.closest&&tgt.closest('.tb'),o=b&&all.find(q=>q.btn===b),it=[];
+ if(o){it.push([o.min?'🗗 还原此窗口':'🗕 最小化此窗口',()=>{if(o.min)focus(o);else{o.w.style.display='none';o.min=1;o.btn.classList.remove('act')}}]);it.push(['✕ 关闭此窗口',()=>o.w.querySelector('[data-k=c]').click()])}
+ it.push(['🖥 显示桌面',()=>all.forEach(q=>{q.w.style.display='none';q.min=1;q.btn.classList.remove('act')})]);
+ it.push(['🗗 还原所有窗口',()=>all.forEach(q=>focus(q))]);
+ it.push(['🗔 层叠窗口',()=>all.forEach((q,i)=>{q.w.classList.remove('max');q.w.style.left=24+i*28+'px';q.w.style.top=16+i*28+'px';focus(q)})]);
+ it.push(['✕ 关闭所有窗口',()=>[...all].forEach(q=>q.w.querySelector('[data-k=c]').click())]);
+ it.push(['🔔 通知中心',()=>{np.classList.add('on');nrender()}]);
+ it.push(['🔒 锁屏',()=>showLock()]);it.push(['⚙ 任务栏设置',()=>open('settings')]);showMenu(x,it)};
+{const B=$('#bar');let tm,sx=0,sy=0;const cx=()=>clearTimeout(tm);
+ B.addEventListener('pointerdown',e=>{lp=0;sx=e.clientX;sy=e.clientY;cx();const tg=e.target;tm=setTimeout(()=>{if(Date.now()-lpT>800)barMenu(sx,tg)},550)});
+ B.addEventListener('pointerup',cx);B.addEventListener('pointercancel',cx);B.addEventListener('pointermove',e=>{if(Math.hypot(e.clientX-sx,e.clientY-sy)>10)cx()});
+ B.addEventListener('contextmenu',e=>{e.preventDefault();if(Date.now()-lpT>800)barMenu(e.clientX,e.target)});
+ B.addEventListener('click',e=>{if(lp){lp=0;e.stopPropagation();e.preventDefault()}},true)}
+// PPT
+const lum=c=>{const n=parseInt((c||'#ffffff').slice(1),16);return(n>>16)*.3+((n>>8)&255)*.59+(n&255)*.11};
+function slideHTML(s){const fg=lum(s.bg)<140?'#fff':'#111',L=s.l;return `<div class=sl style="background:${s.bg||'#fff'};color:${fg}"><div style="position:absolute;inset:0;padding:6cqw 7cqw;display:flex;flex-direction:column;justify-content:${L?'center':'flex-start'};text-align:${L?'center':'left'};gap:2.5cqw"><div style="font-size:${L?7.5:5.5}cqw;font-weight:700">${esc(s.t||'')}</div><div style="font-size:${L?3.4:3.2}cqw;line-height:1.5">${(s.b||'').split('\n').filter(Boolean).map(x=>L?esc(x):'• '+esc(x)).join('<br>')}</div></div></div>`}
+function present(D,i){const o=el('div','');o.style.cssText='position:fixed;inset:0;background:#000;z-index:100001;display:flex;align-items:center;justify-content:center';const st=el('div');st.style.cssText='width:min(100vw,177.7vh)';o.append(st);const show=()=>{st.innerHTML=slideHTML(D.s[i])},close=()=>{removeEventListener('keydown',kd);o.remove();document.fullscreenElement&&document.exitFullscreen()},
+ kd=e=>{if(e.key=='Escape')close();if(['ArrowRight',' ','PageDown'].includes(e.key)&&i<D.s.length-1){i++;show()}if(['ArrowLeft','PageUp'].includes(e.key)&&i>0){i--;show()}};
+ o.onclick=e=>{if(e.clientX<innerWidth*.3){if(i>0){i--;show()}}else if(i<D.s.length-1){i++;show()}else close()};addEventListener('keydown',kd);document.body.append(o);o.requestFullscreen&&o.requestFullscreen().catch(()=>{});show();
+ const x=el('div','','✕');x.style.cssText='position:absolute;top:10px;right:16px;color:#fff;font-size:22px;cursor:pointer;opacity:.7';x.onclick=e=>{e.stopPropagation();close()};o.append(x)}
+apps.ppt={t:'PPT 演示',i:'📙',w:820,h:560,init(b,w,opt){
+ let id=opt.id,x=id?fs.items[id]:null,D={s:[{t:'标题',b:'副标题',bg:'#1e3a8a',l:1}]},cur=0;try{const j=JSON.parse(x.content);if(j&&j.s&&j.s.length)D=j}catch(e){}
+ b.innerHTML=`<div class=bar><input class=nm style="width:130px;padding:4px 8px" value="${esc(x?x.name:'新建演示.ppt')}"><button data-a=sv>💾 保存</button><button data-a=ol>📂 打开本地</button><button data-a=add>➕ 幻灯片</button><button data-a=del>🗑 删除</button><button data-a=up>⬆</button><button data-a=dn>⬇</button><button data-a=play>▶ 放映</button><span class=path></span></div><div style="display:flex;flex:1;min-height:0"><div id=th style="width:130px;overflow:auto;padding:6px;border-right:1px solid var(--bd);flex:none"></div><div style="flex:1;overflow:auto;padding:10px"><div id=st></div><div style="display:flex;gap:12px;margin:8px 0;flex-wrap:wrap"><label>背景 <input type=color id=bg></label><label><input type=checkbox id=ly> 标题页版式</label></div><input id=ti placeholder="标题" style="width:100%;padding:6px 8px;margin-bottom:6px"><textarea id=bo placeholder="内容（每行一个要点）" style="width:100%;height:110px;padding:6px 8px"></textarea></div></div>`;
+ const S0=()=>D.s[cur],rth=()=>{$('#th',b).innerHTML=D.s.map((s,i)=>`<div data-i=${i} style="margin-bottom:8px;border:2px solid ${i==cur?'var(--acc)':'transparent'};border-radius:8px;padding:3px;cursor:pointer"><div style="pointer-events:none">${slideHTML(s)}</div><div style="font-size:11px;text-align:center">${i+1}</div></div>`).join('')},
+ live=()=>{$('#st',b).innerHTML=slideHTML(S0());rth()},rall=()=>{const s=S0();live();$('#ti',b).value=s.t||'';$('#bo',b).value=s.b||'';$('#bg',b).value=s.bg||'#ffffff';$('#ly',b).checked=!!s.l};
+ b.oninput=e=>{const s=S0(),t=e.target.id,v=e.target.value;if(t=='ti')s.t=v;else if(t=='bo')s.b=v;else if(t=='bg')s.bg=v;else if(t=='ly')s.l=e.target.checked?1:0;else return;live()};
+ b.onclick=e=>{const th=e.target.closest('[data-i]');if(th){cur=+th.dataset.i;rall();return}const a=e.target.dataset.a;if(!a)return;
+  if(a=='add'){D.s.splice(cur+1,0,{t:'新幻灯片',b:'',bg:'#ffffff',l:0});cur++;rall()}
+  if(a=='del'&&D.s.length>1){D.s.splice(cur,1);cur=Math.min(cur,D.s.length-1);rall()}
+  if(a=='up'&&cur>0){[D.s[cur-1],D.s[cur]]=[D.s[cur],D.s[cur-1]];cur--;rall()}
+  if(a=='dn'&&cur<D.s.length-1){[D.s[cur+1],D.s[cur]]=[D.s[cur],D.s[cur+1]];cur++;rall()}
+  if(a=='sv'){let n=$('.nm',b).value.trim()||'新建演示.ppt';if(!/\.ppt$/i.test(n))n+='.ppt';id=putFile(id,n,JSON.stringify(D),opt.dir);$('.path',b).textContent='已保存 '+new Date().toLocaleTimeString()}
+  if(a=='play')present(D,cur);if(a=='ol')pickLocal('.pptx',async f=>{try{D=await readPpt(f);cur=0;id=null;$('.nm',b).value=f.name.replace(/\.[^.]+$/,'')+'.ppt';rall();$('.path',b).textContent='已打开 '+f.name}catch(err){$('.path',b).textContent='打开失败：'+err.message}})};rall()}};
+// 网络状态
+const NET={dv:[],sp:0};
+const kb=n=>n>1048576?(n/1048576).toFixed(2)+' MB':(n/1024).toFixed(1)+' KB';
+const netInfo=()=>{const c=navigator.connection||{};return{on:navigator.onLine,type:c.type||'',eff:c.effectiveType||'',dl:c.downlink,rtt:c.rtt,sd:c.saveData}};
+const NTYPE={wifi:'📶 Wi‑Fi',cellular:'📱 移动数据',ethernet:'🔌 有线',bluetooth:'🔵 蓝牙网络',wimax:'WiMAX',mixed:'混合',other:'其他',none:'无',unknown:'未知','':'浏览器未提供'};
+apps.net={t:'网络',i:'🛜',w:440,h:580,single:1,init(b,w){
+ let speed='';const row=(k,v)=>`<div class=rb><span>${k}</span><b>${v}</b></div>`;
+ const devs=()=>{const d=$('#bd',b);if(d)d.innerHTML=NET.dv.map((x,i)=>`<div class=rb><span>🔵 ${esc(x.name||'未命名设备')}</span><b>${x.gatt&&x.gatt.connected?'已连接':'未连接'}</b><button data-a=cn data-i=${i}>${x.gatt&&x.gatt.connected?'断开':'连接'}</button></div>`).join('')||'<div class=ctr>还没有选择设备</div>'};
+ const render=async()=>{const n=netInfo();let st='不可用',bt='不支持';try{const e=await navigator.storage.estimate();st=kb(e.usage)+' / '+kb(e.quota)}catch(e){}
+  if(navigator.bluetooth){try{bt=(await navigator.bluetooth.getAvailability())?'蓝牙可用':'蓝牙不可用/已关闭'}catch(e){bt='无法检测'}}
+  const tr=performance.getEntriesByType('resource').concat(performance.getEntriesByType('navigation')).reduce((s,e)=>s+(e.transferSize||0),0);
+  if(!w.isConnected)return;
+  b.innerHTML=`<div style="padding:10px 14px;overflow:auto"><div style="font-size:42px;text-align:center">${n.on?'🛜':'🚫'}</div><div style="text-align:center;font-size:18px;margin-bottom:8px"><b>${n.on?'已连接网络':'未连接网络'}</b></div>`+
+  row('连接类型',NTYPE[n.type]||n.type)+row('网络质量',n.eff?n.eff.toUpperCase():'未知')+row('下行带宽（估算）',n.dl!=null?n.dl+' Mbps':'未知')+row('延迟（估算）',n.rtt!=null?n.rtt+' ms':'未知')+row('省流量模式',n.sd?'已开启':'未开启')+row('VPN / 代理',n.type=='other'?'可能有 VPN/代理（仅推测）':'网页无法确定')+
+  `<h4>🔵 蓝牙</h4>`+row('状态',bt)+`<div id=bd></div><div class=bar><button data-a=bt>搜索并连接设备</button></div><h4>📊 流量与存储</h4>`+row('本页面已加载',kb(tr))+row('测速已消耗',kb(NET.sp))+row('本地存储',st)+
+  `<div class=bar><button data-a=sp>⚡ 测速</button><span id=spr class=path>${speed}</span></div><div class=ctr style="font-size:12px">浏览器读不到系统的 Wi‑Fi 名称、VPN 开关和手机总流量，这里显示的是网页能获取到的信息。</div></div>`;devs()};
+ const speedTest=async()=>{const r2=$('#spr',b);r2.textContent='测速中…';try{const t=performance.now(),r=await fetch(location.href.split('#')[0],{cache:'no-store'}),buf=await r.arrayBuffer(),ms=performance.now()-t;NET.sp+=buf.byteLength;speed=`${(buf.byteLength*8/1e6/(ms/1000)).toFixed(1)} Mbps · ${Math.round(ms)} ms（${kb(buf.byteLength)}）`;const r3=$('#spr',b);if(r3)r3.textContent=speed}catch(err){const r3=$('#spr',b);if(r3)r3.textContent='测速失败（可能已离线，或是本地文件方式）'}};
+ b.onclick=async e=>{const a=e.target.dataset.a,i=+e.target.dataset.i;
+  if(a=='bt'){try{const d=await navigator.bluetooth.requestDevice({acceptAllDevices:true});if(!NET.dv.includes(d)){NET.dv.push(d);d.addEventListener('gattserverdisconnected',devs);S.btn=d.name||'已选择设备';sv();notify('🔵 蓝牙','已选择 '+(d.name||'设备'))}devs()}catch(err){const d=$('#bd',b);if(d)d.insertAdjacentHTML('beforeend','<div class=ctr>'+(navigator.bluetooth?'已取消，或当前环境不允许蓝牙':'此浏览器不支持蓝牙')+'</div>')}}
+  if(a=='cn'){const d=NET.dv[i];try{if(d.gatt.connected)d.gatt.disconnect();else await d.gatt.connect()}catch(err){}devs()}
+  if(a=='sp')speedTest()};
+ const h=()=>{if(w.isConnected)render()};addEventListener('online',h);addEventListener('offline',h);if(navigator.connection)navigator.connection.addEventListener('change',h);
+ w.onclose=()=>{removeEventListener('online',h);removeEventListener('offline',h);if(navigator.connection)navigator.connection.removeEventListener('change',h)};render()}};
+const trayIcons=async()=>{const n=netInfo();let bt='🔵',bat='🔋';if(navigator.bluetooth){try{if(!(await navigator.bluetooth.getAvailability()))bt='⚪'}catch(e){}}else bt='⚪';try{const g=await navigator.getBattery();if(g.level<.2&&!g.charging)bat='🪫'}catch(e){}$('#qs').textContent=(n.on?'📶':'🚫')+' '+bt+' '+bat};
+trayIcons();setInterval(trayIcons,5000);addEventListener('online',trayIcons);addEventListener('offline',trayIcons);
+addEventListener('keydown',e=>{if(e.key=='Escape'){['#start','#qp','#np'].forEach(s=>$(s).classList.remove('on'));$('#cm').style.display='none'}});
+// 本地文件读取（docx / xlsx / pptx）
+const LIB={mammoth:'https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js',xlsx:'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',jszip:'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'};
+const loadLib=(u,g)=>window[g]?Promise.resolve(window[g]):new Promise((res,rej)=>{const s=el('script');s.src=u;s.onload=()=>window[g]?res(window[g]):rej(new Error('解析库加载失败'));s.onerror=()=>rej(new Error('无法加载解析库（需要联网）'));document.head.append(s)});
+const pickLocal=(acc,cb)=>{const i=el('input');i.type='file';i.accept=acc;i.onchange=()=>{if(i.files[0])cb(i.files[0])};i.click()};
+function clean(h){const d=new DOMParser().parseFromString(h,'text/html');d.querySelectorAll('script,style,iframe,object,embed,link,meta,form').forEach(e=>e.remove());d.querySelectorAll('*').forEach(e=>[...e.attributes].forEach(a=>{if(/^on/i.test(a.name)||/^\s*javascript:/i.test(a.value))e.removeAttribute(a.name)}));return d.body.innerHTML}
+async function readDoc(f){const n=f.name.toLowerCase();
+ if(n.endsWith('.docx')){const m=await loadLib(LIB.mammoth,'mammoth');return clean((await m.convertToHtml({arrayBuffer:await f.arrayBuffer()})).value)}
+ if(/\.(html?|txt|md|csv)$/.test(n)){const t=await f.text();return /\.html?$/.test(n)?clean(t):t.split(/\r?\n/).map(l=>'<p>'+esc(l)+'</p>').join('')}
+ throw new Error('暂不支持此格式（支持 docx、html、txt、md）')}
+async function readSheet(f){const n=f.name.toLowerCase(),D={};if(n.endsWith('.csv'))return JSON.parse(csv2js(await f.text()));
+ const X=await loadLib(LIB.xlsx,'XLSX'),wb=X.read(await f.arrayBuffer()),rows=X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:false,defval:''});
+ rows.slice(0,20).forEach((r,i)=>r.slice(0,10).forEach((v,c)=>{if(String(v).trim()!=='')D['ABCDEFGHIJ'[c]+(i+1)]=String(v)}));return D}
+async function readPpt(f){const Z=await loadLib(LIB.jszip,'JSZip'),z=await Z.loadAsync(await f.arrayBuffer()),names=Object.keys(z.files).filter(k=>/^ppt\/slides\/slide\d+\.xml$/.test(k)).sort((a,b)=>+a.match(/\d+/)[0]-+b.match(/\d+/)[0]),s=[];
+ for(const k of names){const x=await z.files[k].async('string'),ts=[...x.matchAll(/<a:t>([^<]*)<\/a:t>/g)].map(m=>new DOMParser().parseFromString('<p>'+m[1]+'</p>','text/html').body.textContent).filter(t=>t.trim());s.push({t:ts[0]||'幻灯片',b:ts.slice(1).join('\n'),bg:'#ffffff',l:0})}
+ if(!s.length)throw new Error('没有读到幻灯片内容（仅支持 pptx）');s[0].l=1;s[0].bg='#1e3a8a';return{s}}
+document.addEventListener('play',e=>{try{if(S.vol!=null)e.target.volume=S.vol}catch(_){}},true);
+// 新版设置
+apps.settings={t:'设置',i:'⚙️',w:920,h:620,single:1,init(b,w,opt){
+ const NAV=[['sys','🖥','系统'],['bt','🔵','蓝牙和设备'],['per','🎨','个性化'],['app','🧩','应用'],['acc','👤','账户'],['time','🌐','时间和语言'],['lock','🔒','锁屏和密码'],['priv','🛡','隐私和安全'],['upd','🔄','电脑更新']];
+ const SUBT={disp:'显示',sound:'声音',store:'存储',multi:'多任务',notif:'通知',about:'关于'};
+ const SRCH=[['显示','亮度 图标 主题','sys','disp'],['声音','音量','sys','sound'],['存储','空间 清理 重置','sys','store'],['多任务','窗口 层叠','sys','multi'],['通知','通知记录','sys','notif'],['关于','设备信息','sys','about'],['壁纸','背景 图片 颜色','per'],['主题','深色 浅色','per'],['桌面图标','大小 排列','per'],['语言','English 中文','time'],['时区','时间 12小时 秒','time'],['默认搜索引擎','浏览器 必应 谷歌','app'],['蓝牙','设备 网络 wifi','bt'],['账户','用户名 头像','acc'],['锁屏和密码','密码 指纹 人脸 自动锁屏','lock'],['隐私','权限 密码 历史 导出','priv'],['更新','版本','upd']];
+ const TZ=[['','本地时区'],['UTC','UTC'],['Asia/Shanghai','北京'],['Asia/Tokyo','东京'],['Europe/London','伦敦'],['America/New_York','纽约'],['America/Los_Angeles','洛杉矶']];
+ let page=opt.page||'sys',sub=null,q='',ren=0;
+ const sc=(ic,t,d,go)=>`<div class=sc data-go=${go}><span class=si>${ic}</span><span class=sx><b>${t}</b><small>${d}</small></span><span class=ch>›</span></div>`;
+ const sr=(t,c,d)=>`<div class=sr><span class=sx><b>${t}</b>${d?`<small>${d}</small>`:''}</span><span>${c}</span></div>`;
+ const sel=(id,o,v)=>`<select id=${id}>${o.map(x=>`<option value="${x[0]}" ${String(x[0])==String(v)?'selected':''}>${x[1]}</option>`).join('')}</select>`;
+ const btn=(a,l,x='')=>`<button data-a=${a} ${x}>${l}</button>`,chk=(id,v)=>`<input type=checkbox id=${id} ${v?'checked':''}>`;
+ const dev=()=>{const u=navigator.userAgentData;return(u&&u.mobile?'移动设备':'电脑')+' · '+((u&&u.platform)||navigator.platform||'未知')};
+ const P={
+  sys:()=>`<div class=dev><div class=pv></div><div><h2 style="margin:0 0 4px">${esc(S.pc||'此电脑')}</h2><div>${dev()}</div>${ren?`<input id=pcn value="${esc(S.pc||'此电脑')}" style="padding:4px 8px"> ${btn('rs','保存')}`:'<a class=lk data-a=ren>重命名</a>'}</div></div>`+sc('🖥','显示','亮度、图标大小、主题','sys:disp')+sc('🔊','声音','音量','sys:sound')+sc('💾','存储','存储空间、清理、重置','sys:store')+sc('🗗','多任务','窗口层叠、显示桌面','sys:multi')+sc('🔔','通知','通知记录','sys:notif')+sc('ℹ️','关于','设备信息','sys:about'),
+  'sys:disp':()=>sr('亮度',`<input type=range id=br min=20 max=100 value=${S.br||100}>`)+sr('主题',sel('th2',[['auto','跟随系统'],['light','浅色'],['dark','深色']],S.theme))+sr('图标大小',sel('isz',[[0.8,'小'],[1,'标准'],[1.25,'大']],S.isz||1))+sr('桌面图标',btn('ic','重新排列图标')),
+  'sys:sound':()=>sr('系统音量',`<input type=range id=vol min=0 max=1 step=.05 value=${S.vol==null?1:S.vol}>`,'影响音乐、视频和录音的播放'),
+  'sys:store':()=>sr('本地存储用量','<span id=stu>…</span>')+sr('文件和文件夹',I().filter(x=>!x.del).length+' 个')+sr('浏览历史',btn('hist','清除'))+sr('通知记录',btn('clrn','清除'))+sr('重置全部数据',btn('all','重置全部数据'),'将删除所有文件、设置和书签'),
+  'sys:multi':()=>sr('窗口',btn('tile','层叠窗口')+' '+btn('desk','显示桌面')+' '+btn('closeall','关闭所有窗口'),'当前打开 '+all.length+' 个窗口'),
+  'sys:notif':()=>sr('通知记录',btn('clrn','全部清除'))+((S.nt||[]).slice().reverse().map(x=>sr(esc(x.a),new Date(x.t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),esc(x.b||''))).join('')||'<div class=ctr>暂无通知</div>'),
+  'sys:about':()=>[['设备名称',esc(S.pc||'此电脑')],['系统','WebOS 2026.10'],['设备类型',dev()],['屏幕',screen.width+'×'+screen.height+' @'+devicePixelRatio+'x'],['处理器核心',navigator.hardwareConcurrency||'未知'],['内存',navigator.deviceMemory?navigator.deviceMemory+' GB（约）':'未知'],['安全环境',window.isSecureContext?'是':'否（本地文件方式）'],['浏览器',esc(navigator.userAgent.slice(0,90))]].map(r=>sr(r[0],r[1])).join(''),
+  bt:()=>sc('🛜','网络','联网状态、速度、流量','open:net')+sc('🔵','蓝牙','搜索并连接设备','open:net')+sc('📷','相机','拍照','open:camera')+sc('🎙','录音机','录音','open:recorder')+sc('📁','文件资源管理器','导入和导出本地文件','open:explorer'),
+  per:()=>`<div class=sr style="display:block"><b>壁纸</b><div style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0">${WP.map((g,i)=>`<div data-w=${i} style="width:92px;height:58px;border-radius:8px;background:${g};cursor:pointer;border:2px solid ${S.wall===i?'var(--acc)':'transparent'}"></div>`).join('')}</div>纯色：<input type=color id=wc value="#1a73e8"> 　本地图片：<input type=file id=wf accept="image/*"></div>`+sr('主题',sel('th2',[['auto','跟随系统'],['light','浅色'],['dark','深色']],S.theme))+sr('桌面图标大小',sel('isz',[[0.8,'小'],[1,'标准'],[1.25,'大']],S.isz||1))+sr('桌面图标',btn('ic','重新排列图标')),
+  app:()=>sr('默认搜索引擎',sel('se',SE.map((s,i)=>[i,s[0]]),S.se||0),'浏览器地址栏搜索时使用')+desk.map(([k,n])=>sr(apps[k].i+' '+n,btn('op','打开','data-k='+k))).join(''),
+  acc:()=>sr('头像',sel('av',['👤','🐱','🐶','🦊','🐼','🚀'].map(x=>[x,x]),S.av||'👤'))+sr('用户名',`<input id=un value="${esc(S.user||'')}" placeholder="用户" style="padding:4px 8px">`)+sr('账户类型','本地账户','数据只保存在这个浏览器中'),
+  time:()=>sr('语言',sel('lg',[['zh','简体中文'],['en','English']],S.lang))+sr('时区',sel('tz',TZ,S.tz))+sr('12 小时制',chk('h12',S.h12))+sr('任务栏显示秒',chk('sc',S.sec)),
+  lock:()=>{const has=!!S.lk;return sr('密码',has?'已设置':'未设置')+(has?sr('当前密码','<input id=pw0 type=password autocomplete=current-password>'):'')+sr(has?'新密码':'设置密码','<input id=pw1 type=password autocomplete=new-password>')+sr('确认密码','<input id=pw2 type=password autocomplete=new-password>')+sr('',btn('setpw',has?'修改密码':'设置密码')+(has?' '+btn('rmpw','关闭密码'):''))+sr('指纹 / 人脸识别（使用系统）',S.bio?btn('biooff','关闭'):btn('bioon','开启'),'<span id=bioav>检测中…</span>')+sr('系统验证检测',btn('biodiag','检测')+(embedded()?' '+btn('newtab','在新标签页打开'):''),'<span id=bdg></span>')+sr('自动锁屏',sel('alk',[[0,'从不'],[1,'1 分钟'],[5,'5 分钟'],[15,'15 分钟'],[30,'30 分钟']],S.alk||0),'需先设置密码或开启生物识别')+sr('立即锁屏',btn('locknow','🔒 锁屏'))+'<div id=lkm class=ctr></div><div class=ctr style="font-size:12px">这是页面内的锁屏：密码经加盐哈希后只保存在本浏览器，指纹/人脸由系统弹出验证，页面不会读取你的生物信息。它能挡住旁人随手使用，但不是强加密，防不了懂技术的人。</div>'},
+  priv:()=>sr('保存文档时同时导出到本地',chk('al',S.al))+sr('浏览历史',btn('hist','清除'))+sr('已保存的密码',(S.pw||[]).length+' 个 '+btn('pw','清除全部'),'明文保存在本地，请勿保存重要账号')+sr('安全环境',window.isSecureContext?'是':'否','相机、麦克风、传感器需要安全环境'),
+  upd:()=>'<div class=dev><span style="font-size:48px">✅</span><div><h2 style="margin:0">WebOS 已是最新版本</h2><div>版本 2026.10 · 每次打开发布链接都会加载最新页面</div></div></div>'+sr('检查更新',btn('upd','重新加载页面'))};
+ b.innerHTML=`<div class=stw><div class=st><div class=sn><div class=ub><span class=av id=avt>${S.av||'👤'}</span><span><b id=unm>${esc(S.user||'用户')}</b><br><small>本地账户</small></span></div>${NAV.map(n=>`<div class=ni data-p=${n[0]}><span>${n[1]}</span><span>${n[2]}</span></div>`).join('')}</div><div class=sm><input class=sq id=sq placeholder="查找设置"><div class=sb2></div></div></div></div>`;
+ const view=()=>{[...b.querySelectorAll('.ni')].forEach(e=>e.classList.toggle('on',e.dataset.p==page&&!q));let h;
+  if(q){const r=SRCH.filter(s=>(s[0]+' '+s[1]).toLowerCase().includes(q.toLowerCase()));h='<h1>搜索结果</h1>'+(r.map(s=>sc('🔍',s[0],s[1],s[2]+(s[3]?':'+s[3]:''))).join('')||'<div class=ctr>没有找到相关设置</div>')}
+  else{const n=NAV.find(x=>x[0]==page)[2];h=(sub?`<h1><a class=lk data-p=${page}>${n}</a> › ${SUBT[sub]}</h1>`:`<h1>${n}</h1>`)+P[page=='sys'&&sub?'sys:'+sub:page]()}
+  $('.sb2',b).innerHTML=h;if(page=='lock'&&!q)bioWhy().then(w=>{const e=$('#bioav',b);if(e)e.textContent=w||'本设备支持系统指纹/人脸验证'});const pv=$('.pv',b);if(pv)pv.style.background=document.body.style.background;
+  if(sub=='store'&&!q)navigator.storage&&navigator.storage.estimate().then(e=>{const x=$('#stu',b);if(x)x.textContent=kb(e.usage)+' / '+kb(e.quota)}).catch(()=>{})};
+ const go=(p,s)=>{page=p;sub=p=='sys'&&s?s:null;q='';$('#sq',b).value='';view()};
+ const act=async(a,t)=>{
+  if(a=='ren'){ren=1;view()}if(a=='rs'){S.pc=$('#pcn',b).value.trim()||'此电脑';sv();ren=0;view()}
+  if(a=='ic'){S.ipos={};sv();applyIcons()}if(a=='hist'){S.hist=[];sv();t.textContent='已清除'}
+  if(a=='pw'){S.pw=[];sv();view()}if(a=='clrn'){S.nt=[];S.nu=0;sv();badge();view()}
+  if(a=='all'){if(!t.dataset.arm){t.dataset.arm=1;t.textContent='再次点击确认重置';return}try{localStorage.removeItem('webos_fs');localStorage.removeItem('webos_set')}catch(_){}location.reload()}
+  if(a=='tile')all.forEach((o,i)=>{o.w.classList.remove('max');o.w.style.left=24+i*28+'px';o.w.style.top=16+i*28+'px';focus(o)});
+  if(a=='desk')all.forEach(o=>{o.w.style.display='none';o.min=1;o.btn.classList.remove('act')});
+  if(a=='closeall')[...all].forEach(o=>o.w.querySelector('[data-k=c]').click());
+  if(a=='op')open(t.dataset.k);if(a=='upd')location.reload();
+  const msg=x=>{const m=$('#lkm',b);if(m)m.textContent=x};
+  if(a=='setpw'){const p1=$('#pw1',b).value,p2=$('#pw2',b).value;if(S.lk&&!(await pwCheck($('#pw0',b).value)))return msg('当前密码不正确');if(p1.length<4)return msg('密码至少 4 位');if(p1!=p2)return msg('两次输入不一致');await setPw(p1);view();msg('✅ 密码已设置')}
+  if(a=='rmpw'){if(!(await pwCheck($('#pw0',b).value)))return msg('请先输入当前密码');S.lk=null;S.bio=null;S.alk=0;S.locked=0;sv();view();msg('已关闭密码和生物识别')}
+  if(a=='bioon'){if(!S.lk)return msg('请先设置密码（作为备用解锁方式）');{const w=await bioWhy();if(w)return msg(w)}try{await bioEnroll();view();msg('✅ 已开启，将使用系统验证')}catch(err){msg('开启失败：'+bioErr(err))}}
+  if(a=='biooff'){S.bio=null;sv();view()}
+  if(a=='newtab')window.open(location.href.split('#')[0],'_blank');
+  if(a=='biodiag'){const d=$('#bdg',b);if(d){d.textContent='检测中…';const r=await bioDiag();d.innerHTML=r.map(x=>'<div>'+esc(x[0])+'：<b>'+x[1]+'</b></div>').join('')}}if(a=='locknow')showLock()};
+ b.onclick=e=>{const t=e.target.closest('[data-p],[data-go],[data-a],[data-w]');if(!t)return;const D=t.dataset;
+  if(D.p)go(D.p);else if(D.go){const[p,s]=D.go.split(':');if(p=='open')open(s);else go(p,s)}else if(D.w!=null){S.wall=+D.w;sv();applyWall();view()}else if(D.a)act(D.a,t)};
+ b.oninput=e=>{const t=e.target,id=t.id;if(id=='sq'){q=t.value.trim();view()}
+  if(id=='br'){S.br=+t.value;$('#dim').style.opacity=1-S.br/100;sv()}
+  if(id=='vol'){S.vol=+t.value;sv();document.querySelectorAll('audio,video').forEach(v=>v.volume=S.vol)}
+  if(id=='un'){S.user=t.value;sv();$('#unm',b).textContent=t.value||'用户'}};
+ b.onchange=e=>{const t=e.target,id=t.id;
+  if(id=='lg'){S.lang=t.value;sv();location.reload()}if(id=='th2'){S.theme=t.value;sv();applyTheme()}
+  if(id=='tz'){S.tz=t.value;sv();tick()}if(id=='h12'){S.h12=t.checked?1:0;sv();tick()}if(id=='sc'){S.sec=t.checked?1:0;sv();tick()}
+  if(id=='al'){S.al=t.checked?1:0;sv()}if(id=='alk'){S.alk=+t.value;sv()}if(id=='isz'){S.isz=+t.value;sv();applyIcons()}if(id=='se'){S.se=+t.value;sv()}
+  if(id=='av'){S.av=t.value;sv();$('#avt',b).textContent=t.value}if(id=='wc'){S.wall='c:'+t.value;sv();applyWall()}
+  if(id=='wf'&&t.files[0]){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1600/im.width),c=el('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);S.wall='img:'+c.toDataURL('image/jpeg',.8);sv();applyWall();view()};im.src=r.result};r.readAsDataURL(t.files[0])}};
+ view()}};
+// 计算器（带历史记录）与日历（新版布局）
+apps.calc={t:'计算器',i:'🧮',w:640,h:580,init(b,w){
+ S.ch=S.ch||[];let s='',ex='',fresh=0;
+ const K='C ( ) ⌫ ± √ x² % 7 8 9 ÷ 4 5 6 × 1 2 3 − 0 . = +'.split(' ');
+ b.innerHTML=`<div class=cw><button class="chb hbtn" data-k=hist>🕘 历史</button><button class="chb cvb" data-k=conv>🔁 换算</button><div class=cvo id=cvo></div><div class=cm><div class=ce id=ce></div><div id=cd>0</div><div class=kp>${K.map(k=>`<button data-k="${k}" class="${/^[\d.]$/.test(k)?'n':k=='='?'eq':'f'}">${k}</button>`).join('')}</div></div><div class=chs id=chs></div></div>`;
+ const ev=t=>{const x=t.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-');if(!/^[0-9+\-*/.() ]+$/.test(x))throw 0;const r=Function('return '+x)();if(!Number.isFinite(r))throw 0;return +r.toFixed(10)};
+ const hrender=()=>{$('#chs',b).innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b>🕘 历史记录</b><span><button data-k=hclr>清除历史</button> <button data-k=hclose class=hc>✕</button></span></div>'+(S.ch.length?S.ch.slice().reverse().map((h,i)=>`<div class=hi data-h="${S.ch.length-1-i}"><small>${esc(h.e)}</small><b>= ${esc(h.r)}</b></div>`).join(''):'<div class=ctr>还没有计算记录</div>')};
+ const show=()=>{$('#cd',b).textContent=s||'0';$('#ce',b).textContent=ex};
+ const push=(e,r)=>{S.ch.push({e,r:String(r)});S.ch=S.ch.slice(-50);sv();hrender()};
+ const press=k=>{
+  if(k=='conv'){const o=$('#cvo',b);o.classList.add('on');convMount(o);return}
+  if(k=='hist')return $('#chs',b).classList.add('on');if(k=='hclose')return $('#chs',b).classList.remove('on');
+  if(k=='hclr'){S.ch=[];sv();hrender();return}
+  if(s=='错误')s='';
+  if(k=='C'){s='';ex=''}else if(k=='⌫')s=s.slice(0,-1);
+  else if(k=='='){if(!s)return;try{const r=ev(s);push(s,r);ex=s+' =';s=String(r);fresh=1}catch(_){s='错误'}}
+  else if(k=='±'||k=='√'||k=='x²'||k=='%'){try{const r=ev(s);let v,e;if(k=='±'){v=-r;e='-('+s+')'}else if(k=='√'){if(r<0)throw 0;v=Math.sqrt(r);e='√('+s+')'}else if(k=='x²'){v=r*r;e='('+s+')²'}else{v=r/100;e=s+'%'}v=+v.toFixed(10);push(e,v);ex=e+' =';s=String(v);fresh=1}catch(_){s='错误'}}
+  else{if(fresh&&/^[\d.(]$/.test(k)){s='';ex=''}fresh=0;s+=k}
+  show()};
+ b.onclick=e=>{const t=e.target.closest('[data-k],[data-h]');if(!t)return;if(t.dataset.h!=null){const h=S.ch[+t.dataset.h];if(h){s=h.r;ex=h.e+' =';fresh=1;show();$('#chs',b).classList.remove('on')}return}press(t.dataset.k)};
+ const kd=e=>{if(!w.classList.contains('act')||/INPUT|TEXTAREA|SELECT/.test((e.target||{}).tagName))return;const m={Enter:'=','=':'=',Backspace:'⌫',Escape:'C','*':'×','/':'÷','-':'−'},k=m[e.key]||e.key;if(/^[\d.+()=−×÷]$|^⌫$|^C$/.test(k)){e.preventDefault();press(k)}};
+ addEventListener('keydown',kd);w.onclose=()=>removeEventListener('keydown',kd);hrender();show()}};
+apps.calendar={t:'日历',i:'📅',w:780,h:580,init(b,w){
+ let d=new Date(),sel=null;d.setDate(1);const key=(y,m,dd)=>y+'-'+(m+1)+'-'+dd,today=()=>{const t=new Date();return key(t.getFullYear(),t.getMonth(),t.getDate())};
+ const render=()=>{S.ev=S.ev||{};const y=d.getFullYear(),m=d.getMonth(),f=new Date(y,m,1).getDay(),n=new Date(y,m+1,0).getDate(),tk=today(),evk=sel||tk;
+  let c='';for(let i=0;i<f;i++)c+='<i></i>';for(let i=1;i<=n;i++){const k=key(y,m,i),wd=(f+i-1)%7;c+=`<button data-d="${k}" class="dy${k==tk?' td':''}${k==sel?' sl2':''}${wd==0||wd==6?' we':''}">${i}${S.ev[k]?'<small>●</small>':''}</button>`}
+  b.innerHTML=`<div class=cal><div class=cg><div class=bar><button data-m=-1>◀</button><b style="flex:1;text-align:center;font-size:1.15em">${y} 年 ${m+1} 月</b><button data-t=1>今天</button><button data-m=1>▶</button></div><div class=cwk>${[...'日一二三四五六'].map(x=>`<b>${x}</b>`).join('')}${c}</div></div><div class=cev><b>${evk}</b>${(S.ev[evk]||[]).map((t,i)=>`<div class=rb><span>${esc(t)}</span><button data-x=${i}>删除</button></div>`).join('')||'<div class=ctr>没有日程</div>'}<div class=bar><input id=ei placeholder="添加日程" style="flex:1;padding:6px 8px"><button data-a=add>添加</button></div></div></div>`};
+ b.onclick=e=>{const t=e.target.closest('button');if(!t)return;const D=t.dataset,k=sel||today();if(D.m)d.setMonth(d.getMonth()+ +D.m);if(D.t){d=new Date();d.setDate(1);sel=null}if(D.d)sel=D.d;
+  if(D.x!=null){S.ev[k].splice(+D.x,1);if(!S.ev[k].length)delete S.ev[k];sv()}if(D.a){const v=$('#ei',b).value.trim();if(v){(S.ev[k]=S.ev[k]||[]).push(v);sv()}}render()};
+ b.addEventListener('keydown',e=>{if(e.key=='Enter'&&e.target.id=='ei')b.querySelector('[data-a=add]').click()});render()}};
+// 换算工具（汇率、房贷、单位、进制）
+const CV={长度:{i:'📏',u:[['米',1],['千米',1000],['厘米',.01],['毫米',.001],['英寸',.0254],['英尺',.3048],['码',.9144],['英里',1609.344],['海里',1852],['里',500],['尺',1/3]]},
+ 面积:{i:'🗺',u:[['平方米',1],['平方千米',1e6],['公顷',1e4],['亩',2000/3],['平方英尺',.09290304],['英亩',4046.8564],['平方英里',2589988.11]]},
+ 体积:{i:'🧊',u:[['升',1],['毫升',.001],['立方米',1000],['加仑(美)',3.785411784],['夸脱',.946352946],['杯(美)',.2365882365],['立方英寸',.016387064]]},
+ 重量:{i:'⚖️',u:[['千克',1],['克',.001],['毫克',1e-6],['吨',1000],['斤',.5],['两',.05],['磅',.45359237],['盎司',.028349523]]},
+ 温度:{i:'🌡',u:[['摄氏度'],['华氏度'],['开尔文']]},
+ 速度:{i:'🏎',u:[['米/秒',1],['千米/时',1/3.6],['英里/时',.44704],['节',.5144444],['马赫',340.29]]},
+ 压强:{i:'⏲',u:[['帕',1],['千帕',1000],['兆帕',1e6],['巴',1e5],['标准大气压',101325],['毫米汞柱',133.322],['psi',6894.757]]},
+ 功率:{i:'⚡',u:[['瓦',1],['千瓦',1000],['兆瓦',1e6],['公制马力',735.49875],['英制马力',745.69987],['BTU/时',.29307107]]}};
+const FX=()=>S.fx=S.fx||{CNY:1,USD:7.1,EUR:7.7,JPY:.048,GBP:9,HKD:.91,KRW:.0052,AUD:4.6,CAD:5.2};
+function convMount(h){
+ const ORDER=['汇率','房贷','长度','面积','体积','重量','温度','速度','压强','功率','进制'],IC={汇率:'💱',房贷:'🏠',进制:'🔢'};let swap=null;
+ const fmt=n=>isFinite(n)?String(+n.toPrecision(10)):'—',money=n=>n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')+' 元',row=(a,c)=>`<div class=cvr2r><span>${a}</span><b>${c}</b></div>`;
+ const home=()=>{swap=null;h.oninput=h.onchange=null;h.innerHTML=`<div class=cvh><button data-cv=close class=cvbk>←</button><b>换算</b></div><div class=cvg>${ORDER.map(k=>`<div class=cvt data-cv="${k}"><span>${IC[k]||CV[k].i}</span>${k}</div>`).join('')}</div>`};
+ const page=k=>{const head=`<div class=cvh><button data-cv=home class=cvbk>←</button><b>${k}</b></div>`;swap=null;
+  if(k=='房贷'){h.innerHTML=head+`<div class=cvf><label>贷款金额（万元）<input id=l1 type=number value=100></label><label>贷款年限（年）<input id=l2 type=number value=30></label><label>年利率（%）<input id=l3 type=number step=.01 value=3.5></label><label>还款方式<select id=l4><option value=1>等额本息</option><option value=2>等额本金</option></select></label><div id=lr class=cvr2></div></div>`;
+   const c=()=>{const P=+$('#l1',h).value*1e4,n=+$('#l2',h).value*12,r=+$('#l3',h).value/1200,m=$('#l4',h).value;if(!(P>0&&n>0)){$('#lr',h).textContent='';return}let f,l,t;
+    if(m==1){f=l=r?P*r*(1+r)**n/((1+r)**n-1):P/n;t=f*n}else{const pr=P/n;f=pr+P*r;l=pr+pr*r;t=P+P*r*(n+1)/2}
+    $('#lr',h).innerHTML=(m==1?row('每月还款',money(f)):row('首月还款',money(f))+row('末月还款',money(l)))+row('还款总额',money(t))+row('利息总额',money(t-P))};
+   h.oninput=h.onchange=c;c();return}
+  if(k=='进制'){h.innerHTML=head+`<div class=cvf><label>输入数值<input id=nv value=255></label><label>输入进制<select id=nb><option value=2>二进制</option><option value=8>八进制</option><option value=10 selected>十进制</option><option value=16>十六进制</option></select></label><div id=nr class=cvr2></div></div>`;
+   const c=()=>{const v=parseInt($('#nv',h).value.trim(),+$('#nb',h).value);$('#nr',h).innerHTML=isNaN(v)?'<div class=ctr>输入无效</div>':[[2,'二进制'],[8,'八进制'],[10,'十进制'],[16,'十六进制']].map(x=>row(x[1],v.toString(x[0]).toUpperCase())).join('')};h.oninput=h.onchange=c;c();return}
+  const fx=k=='汇率',U=fx?Object.entries(FX()).map(x=>[x[0],x[1]]):CV[k].u,opts=U.map((u,i)=>`<option value=${i}>${u[0]}</option>`).join('');
+  h.innerHTML=head+`<div class=cvf><div class=cvx><input id=va type=number inputmode=decimal step=any value=1><select id=ua>${opts}</select></div><div class=cvs><button data-cv=swap>⇅</button></div><div class=cvx><input id=vb readonly><select id=ub>${opts}</select></div>`+(fx?`<details><summary>编辑汇率（1 单位 = 多少人民币）</summary>${U.filter(u=>u[0]!='CNY').map(u=>`<label>${u[0]}<input data-fx=${u[0]} type=number step=any value=${u[1]}></label>`).join('')}</details><div class=ctr>⚠ 离线参考汇率，不是实时汇率，可手动修改</div>`:'')+`</div>`;
+  $('#ua',h).value=fx?1:0;$('#ub',h).value=fx?0:1;
+  const run=()=>{const v=parseFloat($('#va',h).value),a=+$('#ua',h).value,d=+$('#ub',h).value;if(isNaN(v)){$('#vb',h).value='';return}let r;
+   if(k=='温度'){const c=a==0?v:a==1?(v-32)*5/9:v-273.15;r=d==0?c:d==1?c*9/5+32:c+273.15}else r=v*U[a][1]/U[d][1];$('#vb',h).value=fmt(r)};
+  h.oninput=e=>{const c=e.target.dataset.fx;if(c){const x=U.find(u=>u[0]==c);x[1]=+e.target.value||0;FX()[c]=x[1];sv()}run()};h.onchange=run;
+  swap=()=>{const a=$('#ua',h).value;$('#ua',h).value=$('#ub',h).value;$('#ub',h).value=a;run()};run()};
+ h.onclick=e=>{const t=e.target.closest('[data-cv]');if(!t)return;const v=t.dataset.cv;if(v=='close')h.classList.remove('on');else if(v=='home')home();else if(v=='swap'&&swap)swap();else if(ORDER.includes(v))page(v)};
+ home()}
+// 锁屏
+const cyrb=(str,seed)=>{let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0)};
+async function pwHash(pw,salt,alg){if(alg=='p'){if(!(window.crypto&&crypto.subtle))throw new Error('no-subtle');const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']),bits=await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:new TextEncoder().encode(salt),iterations:100000},k,256);return[...new Uint8Array(bits)].map(x=>x.toString(16).padStart(2,'0')).join('')}let x=salt+'|'+pw;for(let i=0;i<3000;i++)x=cyrb(x,i).toString(36)+pw;return x}
+async function setPw(pw){const a=window.crypto&&crypto.subtle?'p':'f',sl=Math.random().toString(36).slice(2)+Date.now().toString(36);S.lk={a,s:sl,h:await pwHash(pw,sl,a)};sv()}
+async function pwCheck(pw){const L=S.lk;if(!L)return true;try{return await pwHash(pw,L.s,L.a)==L.h}catch(e){return false}}
+const b64=a=>btoa(String.fromCharCode(...new Uint8Array(a))),ub64=x=>Uint8Array.from(atob(x),c=>c.charCodeAt(0));
+async function bioAvail(){try{return !!(window.PublicKeyCredential&&await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())}catch(e){return false}}
+function embedded(){try{return window.top!==window}catch(e){return true}}
+function polOK(f){try{const p=document.permissionsPolicy||document.featurePolicy;return p&&p.allowsFeature?p.allowsFeature(f):null}catch(e){return null}}
+const webOK=()=>/^https?:$/.test(location.protocol)&&!!location.hostname;
+async function bioWhy(){if(!webOK())return '你现在是用“本地文件”（'+location.protocol+'）方式打开的。本地文件没有网站域名，系统验证（WebAuthn）无法使用，即使设备支持也会报 NotAllowedError。请改用页面的 https 链接打开，再开启。';if(!window.isSecureContext)return '当前是“本地文件 / 非 https”方式打开的，浏览器不允许使用系统验证。请改用页面的 https 链接。';if(!window.PublicKeyCredential)return '此浏览器不支持系统验证（WebAuthn）。';if(polOK('publickey-credentials-create')===false||polOK('publickey-credentials-get')===false)return '页面被嵌在其他网页里，浏览器禁止在这里使用系统验证。可点“在新标签页打开”，在独立页面里开启。';if(!(await bioAvail()))return '本设备没有可用的系统验证：请先在系统设置里设置屏幕锁、指纹或人脸。';return ''}
+const bioErr=e=>{const n=(e&&e.name)||'',m={NotAllowedError:'验证被取消、超时，或被当前页面环境禁止（页面嵌在其他网页里时常见）',SecurityError:'页面域名或环境不允许使用系统验证',NotSupportedError:'此设备或浏览器不支持',InvalidStateError:'系统里已存在该验证，请先关闭再重新开启'}[n];return(m||'未知错误')+(n?'（'+n+'）':'')+(webOK()?'':'；你现在是用本地文件方式打开的，没有网站域名')};
+async function bioDiag(){const yn=v=>v===null?'未知':v?'✅ 是':'❌ 否',av=window.PublicKeyCredential?await bioAvail():false;return [['通过网址（http/https）打开，而非本地文件',yn(webOK())],['https 安全环境',yn(!!window.isSecureContext)],['浏览器支持系统验证',yn(!!window.PublicKeyCredential)],['设备有可用验证器（指纹/人脸/屏幕锁）',yn(av)],['页面被嵌在其他网页里',embedded()?'⚠ 是':'否'],['允许创建验证',yn(polOK('publickey-credentials-create'))],['允许使用验证',yn(polOK('publickey-credentials-get'))]]}
+async function bioEnroll(){const c=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:'WebOS'},user:{id:crypto.getRandomValues(new Uint8Array(16)),name:S.user||'user',displayName:S.user||'\u7528\u6237'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'discouraged'},timeout:60000,attestation:'none'}});S.bio=b64(c.rawId);sv()}
+async function bioVerify(){return !!(await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:ub64(S.bio)}],userVerification:'required',timeout:60000}}))}
+const lockEl=el('div');lockEl.id='lock';document.body.append(lockEl);let lkFail=0,lkUntil=0,lkIv=0,lastAct=Date.now();
+function unlock(){lkFail=0;lockEl.classList.add('out');setTimeout(()=>{lockEl.classList.remove('on','out');lockEl.innerHTML='';clearInterval(lkIv);S.locked=0;sv()},380)}
+function lkTick(){const t=$('#lkt',lockEl),d=$('#lkd',lockEl);if(t)t.textContent=fmtT();if(d)d.textContent=new Date().toLocaleDateString(S.lang=='en'?'en-US':'zh-CN',{timeZone:tz(),month:'long',day:'numeric',weekday:'long'})}
+function showLock(){S.locked=1;sv();['#start','#qp','#np'].forEach(x=>$(x).classList.remove('on'));$('#cm').style.display='none';lockEl.classList.remove('out');lockEl.classList.add('on');
+ const pw=!!S.lk,bio=!!S.bio;
+ lockEl.innerHTML=`<div class=lav>${S.av||'\ud83d\udc64'}</div><b style=\"font-size:1.3em\">${esc(S.user||'\u7528\u6237')}</b><div class=lt id=lkt></div><div class=ld id=lkd></div>`+((pw||bio)?(pw?`<input id=lkp type=password placeholder=\"\u8f93\u5165\u5bc6\u7801\" autocomplete=current-password><button id=lkb>\u89e3\u9501</button>`:'')+(bio?`<button id=lkbio>\ud83d\udc46 \u4f7f\u7528\u6307\u7eb9 / \u4eba\u8138\u89e3\u9501</button>`:'')+'<div id=lkm style=\"min-height:1.4em\"></div>':`<button id=lkgo>\u70b9\u51fb\u8fdb\u5165</button><div style=\"opacity:.8;font-size:.9em\">\u672a\u8bbe\u7f6e\u5bc6\u7801\uff0c\u53ef\u76f4\u63a5\u8fdb\u5165\uff08\u5728 \u8bbe\u7f6e \u203a \u9501\u5c4f\u548c\u5bc6\u7801 \u4e2d\u8bbe\u7f6e\uff09</div>`);
+ lkTick();clearInterval(lkIv);lkIv=setInterval(lkTick,1000);const p=$('#lkp',lockEl);if(p)setTimeout(()=>p.focus(),100)}
+const lkMsg=x=>{const m=$('#lkm',lockEl);if(m)m.textContent=x};
+lockEl.onclick=async e=>{const id=e.target.id;
+ if(id=='lkgo')return unlock();
+ if(id=='lkb'){const now=Date.now();if(now<lkUntil)return lkMsg('\u5c1d\u8bd5\u592a\u591a\uff0c\u8bf7 '+Math.ceil((lkUntil-now)/1000)+' \u79d2\u540e\u518d\u8bd5');const p=$('#lkp',lockEl);if(await pwCheck(p.value))return unlock();lkFail++;p.value='';p.classList.remove('shake');void p.offsetWidth;p.classList.add('shake');if(lkFail>=5){lkUntil=Date.now()+30000;lkFail=0;lkMsg('\u9519\u8bef\u6b21\u6570\u8fc7\u591a\uff0c\u8bf7 30 \u79d2\u540e\u518d\u8bd5')}else lkMsg('\u5bc6\u7801\u4e0d\u6b63\u786e')}
+ if(id=='lkbio'){lkMsg('\u6b63\u5728\u8c03\u8d77\u7cfb\u7edf\u9a8c\u8bc1\u2026');try{if(await bioVerify())return unlock();lkMsg('\u9a8c\u8bc1\u672a\u901a\u8fc7')}catch(err){lkMsg((await bioWhy()||bioErr(err))+' 可改用密码解锁。')}}};
+lockEl.addEventListener('keydown',e=>{if(e.key=='Enter'&&e.target.id=='lkp')$('#lkb',lockEl).click();if(e.key=='Enter'&&$('#lkgo',lockEl))unlock()});
+$('#lkq').onclick=()=>showLock();$('#lk').onclick=()=>{$('#start').classList.remove('on');showLock()};
+addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.altKey&&e.key.toLowerCase()=='l'){e.preventDefault();showLock()}});
+['pointerdown','keydown','wheel'].forEach(ev=>addEventListener(ev,()=>lastAct=Date.now(),true));
+setInterval(()=>{if(S.alk&&(S.lk||S.bio)&&!lockEl.classList.contains('on')&&Date.now()-lastAct>S.alk*60000)showLock()},5000);
+if(S.locked&&(S.lk||S.bio))showLock();else if(S.locked){S.locked=0;sv()}
+// 桌面、开始菜单
+const desk=[['explorer','此电脑'],['recycle','回收站'],['notepad','记事本'],['music','音乐'],['video','视频'],['games','游戏'],['calc','计算器'],['weather','天气'],['clock','时钟'],['word','Word 文档'],['sheet','表格'],['ppt','PPT 演示'],['browser','浏览器'],['calendar','日历'],['camera','相机'],['recorder','录音机'],['net','网络'],['settings','设置']];
+const coarse=matchMedia('(pointer:coarse)').matches;
+$('#icons').innerHTML=desk.map(([k,n])=>`<div class=ic data-k=${k}><b>${apps[k].i}</b><span>${n}</span></div>`).join('');
+let moved=0;
+const UI=()=>Math.min(1.6,Math.max(1,innerWidth/1280));
+const applyIcons=()=>{const u=UI(),z=(S.isz||1)*u,cw=92*z,ch=100*z,rows=Math.max(1,Math.floor(($('#desk').clientHeight-8)/ch));document.documentElement.style.setProperty('--is',z);document.documentElement.style.setProperty('--ui',u);S.ipos=S.ipos||{};[...$('#icons').children].forEach((e,i)=>{const p=S.ipos[e.dataset.k]||[8+Math.floor(i/rows)*cw,8+(i%rows)*ch];e.style.left=p[0]+'px';e.style.top=p[1]+'px'})};
+$('#icons').addEventListener('pointerdown',e=>{const ic=e.target.closest('.ic');if(!ic)return;const z=(S.isz||1)*UI(),cw=92*z,ch=100*z,sx=e.clientX,sy=e.clientY,ox=ic.offsetLeft,oy=ic.offsetTop;let go=0;
+ const mv=m=>{const dx=m.clientX-sx,dy=m.clientY-sy;if(!go&&Math.hypot(dx,dy)<6)return;go=1;moved=1;ic.style.zIndex=5;ic.style.left=ox+dx+'px';ic.style.top=oy+dy+'px'};
+ const up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);ic.style.zIndex='';if(!go)return;const D=$('#desk'),x=Math.min(Math.max(0,Math.round((ic.offsetLeft-8)/cw)*cw+8),Math.max(0,D.clientWidth-cw)),y=Math.min(Math.max(0,Math.round((ic.offsetTop-8)/ch)*ch+8),Math.max(0,D.clientHeight-ch));
+  const o=[...$('#icons').children].find(q=>q!==ic&&q.offsetLeft==x&&q.offsetTop==y);if(o){o.style.left=ox+'px';o.style.top=oy+'px';S.ipos[o.dataset.k]=[ox,oy]}
+  S.ipos[ic.dataset.k]=[x,y];ic.style.left=x+'px';ic.style.top=y+'px';sv();setTimeout(()=>moved=0,60)};
+ addEventListener('pointermove',mv);addEventListener('pointerup',up)});
+addEventListener('resize',applyIcons);applyIcons();
+$('#icons').addEventListener(coarse?'click':'dblclick',e=>{const c=e.target.closest('.ic');if(c&&!moved)open(c.dataset.k)});
+const names=Object.fromEntries(desk);
+const rg=f=>{$('#grid').innerHTML=desk.filter(([k,n])=>n.includes(f)||apps[k].t.includes(f)).map(([k,n])=>`<button data-k=${k}><b>${apps[k].i}</b><span>${n}</span></button>`).join('')};rg('');
+$('#grid').onclick=e=>{const c=e.target.closest('button');if(c)open(c.dataset.k)};
+$('#q').oninput=e=>rg(e.target.value.trim());
+$('#sb').onclick=e=>{e.stopPropagation();$('#np').classList.remove('on');$('#qp').classList.remove('on');$('#start').classList.toggle('on');$('#q').value='';rg('')};
+$('#start').onclick=e=>e.stopPropagation();
+$('#pw').onclick=()=>location.reload();
+$('#th').onclick=()=>{const r=document.documentElement,d=getComputedStyle(r).getPropertyValue('--s2').trim()=='#2d2d2d';r.dataset.theme=S.theme=d?'light':'dark';sv()};
+document.addEventListener('click',()=>{$('#np').classList.remove('on');$('#qp').classList.remove('on');$('#start').classList.remove('on');$('#cm').style.display='none'});
+$('#desk').oncontextmenu=e=>{e.preventDefault();const m=$('#cm');m.innerHTML='<button data-c=n>📄 新建文档</button><button data-c=e>📁 打开文件资源管理器</button><button data-c=i>🖥 整理图标</button>';m.style.cssText=`display:block;left:${Math.min(e.clientX,innerWidth-190)}px;top:${Math.min(e.clientY,innerHeight-120)}px`;m.onclick=ev=>{const c=ev.target.dataset.c;if(c=='n')open('notepad',{});if(c=='e')open('explorer');if(c=='i'){S.ipos={};sv();applyIcons()}}};
+const tick=()=>{$('#tm').textContent=fmtT();$('#dt').textContent=new Date().toLocaleDateString(S.lang=='en'?'en-US':'zh-CN',{timeZone:tz()})};tick();setInterval(tick,1000);applyWall();applyTheme();
+if(S.lang=='en'){const D='文件资源管理器=File Explorer|回收站=Recycle Bin|记事本=Notepad|音乐播放器=Music Player|视频播放器=Video Player|此电脑=This PC|计算器=Calculator|浏览器=Browser|设置=Settings|天气=Weather|时钟=Clock|游戏=Games|音乐=Music|视频=Video|搜索应用=Search apps|主题=Theme|重启=Restart|用户=User|上一级=Up|新建文件夹=New folder|新建文档=New document|删除=Delete|文档=Documents|图片=Pictures|下载=Downloads|此文件夹为空=This folder is empty|请先进入一个文件夹（如“文档”）=Open a folder first (e.g. Documents)|清空回收站=Empty Recycle Bin|个项目= items|回收站是空的=Recycle Bin is empty|还原=Restore|永久删除=Delete forever|保存=Save|已保存=Saved|在这里输入内容…=Type here…|未播放=Not playing|播放=Play|暂停=Pause|小星星=Twinkle Twinkle|欢乐颂=Ode to Joy|生日快乐=Happy Birthday|极光=Aurora|粒子=Particles|波浪=Waves|贪吃蛇=Snake|井字棋=Tic-Tac-Toe|得分：=Score: |方向键或按钮控制=Arrow keys or buttons|游戏结束，点画面重开=Game over, tap to restart|你是 X，先手=You are X, you go first|你赢了！=You win!|电脑赢了=Computer wins|平局=Draw|轮到你了=Your turn|重新开始=Restart|演示数据（离线）=Demo data (offline)|北京=Beijing|上海=Shanghai|广州=Guangzhou|成都=Chengdu|哈尔滨=Harbin|晴=Sunny|多云=Cloudy|雷阵雨=Thunderstorm|阴=Overcast|小雪=Light snow|湿度=Humidity|西北风 3级=NW wind 3|东风 2级=E wind 2|南风 2级=S wind 2|微风=Light breeze|北风 4级=N wind 4|周日=Sun|周一=Mon|周二=Tue|周三=Wed|周四=Thu|周五=Fri|周六=Sat|语言=Language|壁纸=Wallpaper|纯色：=Solid color: |本地图片：=Local image: |外观=Appearance|跟随系统=Follow system|浅色=Light|深色=Dark|时间与日期=Time & date|时区：=Time zone: |本地时区=Local time zone|东京=Tokyo|伦敦=London|纽约=New York|洛杉矶=Los Angeles|12 小时制=12-hour clock|任务栏显示秒=Show seconds in taskbar|存储=Storage|已用本地存储=Local storage used|文件=Files|书签=Bookmarks|历史记录=History|历史=History|所有数据保存在本浏览器中。=All data is stored in this browser.|清除浏览历史=Clear browsing history|重置全部数据=Reset all data|再次点击确认重置=Click again to confirm|输入网址或搜索=Enter URL or search|前往=Go|主页=Home|部分网站会拒绝在框架中打开，可点 ↗ 在新标签页打开=Some sites refuse to open in a frame; use ↗ to open in a new tab|WebOS 浏览器=WebOS Browser|输入网址或关键词=Enter a URL or keyword|搜索或输入网址=Search or enter URL|搜索=Search|必应=Bing|维基百科=Wikipedia|暂无记录=No history yet|打开=Open|日历=Calendar|显示桌面=Show desktop|蓝牙和设备=Bluetooth & devices|个性化=Personalization|应用=Apps|账户=Accounts|时间和语言=Time & language|隐私和安全=Privacy & security|电脑更新=Updates|查找设置=Find a setting|重命名=Rename|声音=Sound|多任务=Multitasking|关于=About|打开本地=Open local file|本地账户=Local account|系统音量=System volume|系统相机=System camera|系统录音=System recorder|系统=System|搜索结果=Search results|没有找到相关设置=No matching settings|默认搜索引擎=Default search engine|清除历史=Clear history|锁屏和密码=Lock screen & password|锁屏=Lock|输入密码=Enter password|解锁=Unlock|点击进入=Click to enter|使用指纹 / 人脸解锁=Unlock with fingerprint / face|自动锁屏=Auto-lock|立即锁屏=Lock now|系统验证检测=System verification check|检测=Check|在新标签页打开=Open in new tab|从不=Never|设置密码=Set password|修改密码=Change password|关闭密码=Turn off password|确认密码=Confirm password|当前密码=Current password|新密码=New password|换算=Convert|汇率=Exchange rate|房贷=Mortgage|长度=Length|面积=Area|体积=Volume|重量=Weight|温度=Temperature|速度=Speed|压强=Pressure|功率=Power|进制=Base|今天=Today|还没有计算记录=No calculations yet|网络质量=Network quality|已连接网络=Connected|未连接网络=Not connected|连接类型=Connection type|下行带宽（估算）=Downlink (estimated)|延迟（估算）=Latency (estimated)|省流量模式=Data saver|已开启=On|未开启=Off|未知=Unknown|网页无法确定=Cannot be determined by a web page|可能有 VPN/代理（仅推测）=Possibly VPN/proxy (guess only)|搜索并连接设备=Find and connect device|还没有选择设备=No device selected|未命名设备=Unnamed device|流量与存储=Traffic & storage|本页面已加载=Loaded by this page|测速已消耗=Used by speed test|本地存储=Local storage|测速=Speed test|测速中…=Testing…|网络=Network|已选择=Selected|断开=Disconnect|连接=Connect|未连接=Disconnected|还原所有窗口=Restore all windows|层叠窗口=Cascade windows|关闭所有窗口=Close all windows|通知中心=Notification center|任务栏设置=Taskbar settings|关闭此窗口=Close this window|最小化此窗口=Minimize this window|还原此窗口=Restore this window|电量=Battery level|全部清除=Clear all|暂无通知=No notifications|没有日程=No events|打开日历=Open calendar|通知=Notifications|已导入=Imported|今天的日程=Today’s events|充电中=Charging|提醒=Reminder|放映=Present|幻灯片=Slide|标题页版式=Title layout|背景=Background|内容（每行一个要点）=Content (one point per line)|桌面图标=Desktop icons|图标大小：=Icon size: |标准=Normal|重新排列图标=Re-arrange icons|整理图标=Arrange icons|拖动桌面图标可自由摆放，会自动对齐网格。=Drag icons to place them freely; they snap to a grid.|相机=Camera|录音机=Recorder|指南针=Compass|闹钟=Alarm|倒计时=Timer|秒表=Stopwatch|世界=World|导出到本地=Export to local|添加城市=Add city|保存文档时同时导出到本地=Also export to local when saving documents|开启相机=Start camera|拍照=Take photo|开始录音=Start recording|停止并保存=Stop & save|启用传感器=Enable sensor|添加=Add|开始=Start|重置=Reset|计次=Lap|深色模式=Dark mode|全屏=Fullscreen|亮度=Brightness|蓝牙=Bluetooth|电池=Battery|已联网=Online|未联网=Offline|气候估算（离线），不是实时天气=Climate estimate (offline), not live weather|表格=Spreadsheet|新建表格=New spreadsheet|导入=Import|添加视频=Add video|添加音乐=Add music|播放网址=Play URL|内置演示=Built-in demo|内置旋律=Built-in melodies|视频网址=Video URL|还没有视频，点“添加视频”导入=No videos yet. Tap Add video to import|还没有音乐，点“添加音乐”导入=No music yet. Tap Add music to import|无法播放此视频=Cannot play this video|若无法播放，可能是网站不允许外链或页面安全策略拦截=If it won’t play, the site may block embedding or the page security policy blocks it|演示动画=Demo animations|电子旋律=Melodies|照片=Photos|正文=Body|标题 1=Heading 1|标题 2=Heading 2|字号=Size|特大=Huge|大=Large|小=Small|列表=List|在这里开始写作…=Start writing here…|支持 =Supports |密码管理=Password manager|密码以明文保存在本浏览器的本地存储中，请勿保存重要账号。=Passwords are stored in plain text in this browser’s local storage. Don’t save important accounts.|网站=Site|用户名=Username|密码=Passwords|清除全部=Clear all|显示=Show|谷歌=Google|百度=Baidu|视频=Videos'.split('|').map(x=>x.split('=')),K=D.sort((a,b)=>b[0].length-a[0].length);
+ TR=s=>{for(const[k,v]of K)if(s.includes(k))s=s.split(k).join(v);return s};
+ const walk=n=>{if(n.nodeType==3){const v=TR(n.data);if(v!==n.data)n.data=v}else if(n.nodeType==1){['placeholder','title'].forEach(a=>{if(n.hasAttribute(a))n.setAttribute(a,TR(n.getAttribute(a)))});n.childNodes.forEach(walk)}};
+ new MutationObserver(ms=>ms.forEach(m=>{m.addedNodes.forEach(walk);if(m.type=='characterData')walk(m.target)})).observe(document.body,{childList:true,subtree:true,characterData:true});walk(document.body);document.documentElement.lang='en'}
+</script></body></html>
